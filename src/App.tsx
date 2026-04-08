@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import CookieBanner from "@/components/CookieBanner";
 
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -21,6 +22,11 @@ import Recommendations from "./pages/dashboard/Recommendations";
 import AIChat from "./pages/dashboard/AIChat";
 import DashboardSettings from "./pages/dashboard/DashboardSettings";
 import Billing from "./pages/dashboard/Billing";
+import Terms from "./pages/legal/Terms";
+import Privacy from "./pages/legal/Privacy";
+import Cookies from "./pages/legal/Cookies";
+import GDPR from "./pages/legal/GDPR";
+import Refund from "./pages/legal/Refund";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +43,11 @@ const App = () => (
             <Route path="/auth/register" element={<Register />} />
             <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
             <Route path="/pricing" element={<Pricing />} />
+            <Route path="/terms" element={<Terms />} />
+            <Route path="/privacy" element={<Privacy />} />
+            <Route path="/cookies" element={<Cookies />} />
+            <Route path="/gdpr" element={<GDPR />} />
+            <Route path="/refund" element={<Refund />} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
               <Route index element={<DashboardOverview />} />
@@ -49,6 +60,7 @@ const App = () => (
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <CookieBanner />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
