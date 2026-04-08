@@ -3,8 +3,24 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
+
+import Index from "./pages/Index";
+import NotFound from "./pages/NotFound";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+import Onboarding from "./pages/Onboarding";
+import Pricing from "./pages/Pricing";
+import Admin from "./pages/Admin";
+import DashboardLayout from "./components/dashboard/DashboardLayout";
+import DashboardOverview from "./pages/dashboard/DashboardOverview";
+import Platforms from "./pages/dashboard/Platforms";
+import Analytics from "./pages/dashboard/Analytics";
+import Recommendations from "./pages/dashboard/Recommendations";
+import AIChat from "./pages/dashboard/AIChat";
+import DashboardSettings from "./pages/dashboard/DashboardSettings";
+import Billing from "./pages/dashboard/Billing";
 
 const queryClient = new QueryClient();
 
@@ -14,11 +30,26 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth/login" element={<Login />} />
+            <Route path="/auth/register" element={<Register />} />
+            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+              <Route index element={<DashboardOverview />} />
+              <Route path="platforms" element={<Platforms />} />
+              <Route path="analytics" element={<Analytics />} />
+              <Route path="recommendations" element={<Recommendations />} />
+              <Route path="ai-chat" element={<AIChat />} />
+              <Route path="settings" element={<DashboardSettings />} />
+              <Route path="settings/billing" element={<Billing />} />
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
