@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { TrendingUp, Users, Activity, Zap, Checkbox } from 'lucide-react';
+import { TrendingUp, Users, Activity, Zap, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 // Health score circle component
