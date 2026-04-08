@@ -18,7 +18,7 @@ const PRICES = {
   },
   agency: {
     monthly: { id: 'price_1TJugcGov5n78hOqYt34TN96', amount: '49' },
-    yearly: { id: 'price_1TJugdGov5n78hOqIGVni8yJ', amount: '490' },
+    yearly: { id: 'price_1TJugdGov5n78hOqlGVni8yJ', amount: '490' },
   },
 };
 
