@@ -11,7 +11,7 @@ export default function Privacy() {
           <p className="text-sm text-muted-foreground mb-6">Ultima actualizare: 8 aprilie 2026</p>
 
           <h2>1. Operatorul de date</h2>
-          <p>SC BETTER MUSIC DISTRIBUTION SRL, CUI [CUI], Reg. Com. [J__/____/____], cu sediul în [Adresa], România.</p>
+          <p>SC BETTER MUSIC DISTRIBUTION SRL, CUI 43328568, Reg. Com. J18/952/2020 (EUID ROONRC.J18/952/2020), cu sediul în Str. Seci nr. 40, Ap. BIR. 2, Bălești, jud. Gorj, cod 217045, România.</p>
 
           <h2>2. Date colectate</h2>
           <ul>

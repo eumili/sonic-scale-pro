@@ -40,7 +40,7 @@ export default function GDPR() {
           <h2>Responsabil Protecția Datelor (DPO)</h2>
           <p>Email: <a href="mailto:privacy@getartistpulse.com" className="text-primary">privacy@getartistpulse.com</a><br />
           SC BETTER MUSIC DISTRIBUTION SRL<br />
-          CUI [CUI], [Adresa], România</p>
+          CUI 43328568, Reg. Com. J18/952/2020, Str. Seci nr. 40, Ap. BIR. 2, Bălești, jud. Gorj, cod 217045, România</p>
 
           <h2>Autoritatea de supraveghere</h2>
           <p>Ai dreptul de a depune o plângere la Autoritatea Națională de Supraveghere a Prelucrării Datelor cu Caracter Personal (ANSPDCP) — <a href="https://www.dataprotection.ro" className="text-primary" target="_blank" rel="noopener noreferrer">www.dataprotection.ro</a>.</p>

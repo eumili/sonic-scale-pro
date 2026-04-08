@@ -11,7 +11,7 @@ export default function Terms() {
           <p className="text-sm text-muted-foreground mb-6">Ultima actualizare: 8 aprilie 2026</p>
 
           <h2>1. Operatorul</h2>
-          <p>SC BETTER MUSIC DISTRIBUTION SRL, CUI [CUI], Reg. Com. [J__/____/____], cu sediul în [Adresa], România. Contact: <a href="mailto:contact@getartistpulse.com" className="text-primary">contact@getartistpulse.com</a>.</p>
+          <p>SC BETTER MUSIC DISTRIBUTION SRL, CUI 43328568, Reg. Com. J18/952/2020 (EUID ROONRC.J18/952/2020), cu sediul în Str. Seci nr. 40, Ap. BIR. 2, Bălești, jud. Gorj, cod 217045, România. Contact: <a href="mailto:contact@getartistpulse.com" className="text-primary">contact@getartistpulse.com</a>.</p>
 
           <h2>2. Definiții</h2>
           <p><strong>ArtistPulse</strong> — platforma SaaS accesibilă la getartistpulse.com, care oferă servicii de audit și analiză a prezenței digitale pentru artiști muzicali.</p>

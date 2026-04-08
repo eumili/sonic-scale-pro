@@ -37,8 +37,8 @@ export default function Refund() {
           <p>
             Email suport: <a href="mailto:support@getartistpulse.com" className="text-primary">support@getartistpulse.com</a><br />
             SC BETTER MUSIC DISTRIBUTION SRL<br />
-            CUI [CUI], Reg. Com. [J__/____/____]<br />
-            [Adresa], România
+            CUI 43328568, Reg. Com. J18/952/2020 (EUID ROONRC.J18/952/2020)<br />
+            Str. Seci nr. 40, Ap. BIR. 2, Bălești, jud. Gorj, cod 217045, România
           </p>
         </div>
       </section>
