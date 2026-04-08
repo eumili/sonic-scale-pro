@@ -191,7 +191,7 @@ export default function DashboardOverview() {
                 <div className={`h-5 w-5 rounded-md border flex items-center justify-center shrink-0 ${
                   completedTodos.has(i) ? 'bg-primary border-primary' : 'border-border'
                 }`}>
-                  {completedTodos.has(i) && <Checkbox className="h-3 w-3 text-primary-foreground" />}
+                  {completedTodos.has(i) && <Check className="h-3 w-3 text-primary-foreground" />}
                 </div>
                 {t}
               </button>
