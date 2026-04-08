@@ -4,8 +4,10 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Lock, Send, Loader2, Bot, User, Sparkles } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Lock, Send, Loader2, Bot, User, Sparkles, ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -20,7 +22,11 @@ function ChatBubble({ message }: { message: Message }) {
         {isUser ? <User className="h-4 w-4 text-primary" /> : <Bot className="h-4 w-4 text-muted-foreground" />}
       </div>
       <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${isUser ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
-        {message.content}
+        {isUser ? message.content : (
+          <div className="prose prose-sm prose-invert max-w-none">
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -32,13 +38,19 @@ export default function AIChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+  const [healthScore, setHealthScore] = useState<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('plan').eq('id', user.id).single().then(({ data }) => {
-      if (data?.plan) setUserPlan(data.plan);
+    supabase.from('profiles').select('subscription_tier').eq('id', user.id).single().then(({ data }) => {
+      if (data?.subscription_tier) setUserPlan(data.subscription_tier);
     });
+    supabase.from('artist_health_scores').select('*').eq('user_id', user.id)
+      .order('score_date', { ascending: false }).limit(1).then(({ data }) => {
+        if (data?.[0]) setHealthScore(data[0]);
+      });
   }, [user]);
 
   useEffect(() => {
@@ -48,18 +60,43 @@ export default function AIChat() {
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
     const userMsg: Message = { role: 'user', content: input.trim() };
-    setMessages(prev => [...prev, userMsg]);
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
     setInput('');
     setIsLoading(true);
 
-    // Mock response — will be replaced with edge function call
-    setTimeout(() => {
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-chat', {
+        body: { messages: newMessages },
+      });
+
+      if (error) {
+        // Check for 402 upgrade required
+        if (error.message?.includes('402') || (data && data.error === 'upgrade_required')) {
+          setShowUpgrade(true);
+          setMessages(prev => prev.slice(0, -1)); // remove user msg
+          setIsLoading(false);
+          return;
+        }
+        throw error;
+      }
+
+      if (data?.error === 'upgrade_required') {
+        setShowUpgrade(true);
+        setMessages(prev => prev.slice(0, -1));
+        setIsLoading(false);
+        return;
+      }
+
+      setMessages(prev => [...prev, { role: 'assistant', content: data.text }]);
+    } catch (err: any) {
       setMessages(prev => [
         ...prev,
-        { role: 'assistant', content: 'Feature coming soon. Aceasta functionalitate va fi disponibila in curand cu AI real care iti analizeaza performanta muzicala.' },
+        { role: 'assistant', content: 'Eroare la conectarea cu AI. Incearca din nou.' },
       ]);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   if (userPlan === 'free') {
@@ -78,11 +115,33 @@ export default function AIChat() {
 
   return (
     <div className="animate-fade-in flex flex-col h-[calc(100vh-7rem)]">
+      {/* Upgrade Modal */}
+      <Dialog open={showUpgrade} onOpenChange={setShowUpgrade}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" /> Upgrade la Pro
+            </DialogTitle>
+            <DialogDescription>
+              AI Chat este disponibil doar pentru planurile Pro și Agency. Upgrade acum pentru acces nelimitat.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 mt-4">
+            <Button asChild className="flex-1">
+              <Link to="/pricing">
+                Vezi planurile <ArrowUpRight className="h-4 w-4 ml-1" />
+              </Link>
+            </Button>
+            <Button variant="outline" onClick={() => setShowUpgrade(false)}>Inchide</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-2xl font-bold text-foreground">AI Chat</h1>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Sparkles className="h-3.5 w-3.5 text-primary" />
-          Powered by AI
+          Powered by Claude
         </div>
       </div>
 
@@ -113,10 +172,7 @@ export default function AIChat() {
           </div>
 
           <div className="p-4 border-t border-border/50">
-            <form
-              onSubmit={e => { e.preventDefault(); sendMessage(); }}
-              className="flex gap-2"
-            >
+            <form onSubmit={e => { e.preventDefault(); sendMessage(); }} className="flex gap-2">
               <Input
                 value={input}
                 onChange={e => setInput(e.target.value)}
@@ -136,18 +192,24 @@ export default function AIChat() {
           <h3 className="text-sm font-semibold text-foreground">Context</h3>
           <div className="glass-card p-3 text-center">
             <p className="text-xs text-muted-foreground mb-1">Health Score</p>
-            <p className="text-3xl font-bold text-primary">—</p>
+            <p className="text-3xl font-bold text-primary">{healthScore?.total_score ?? '—'}</p>
           </div>
           <div className="space-y-2">
-            {['Consistenta', 'Crestere', 'Engagement', 'Reach', 'Momentum'].map(m => (
-              <div key={m} className="flex justify-between text-xs">
-                <span className="text-muted-foreground">{m}</span>
-                <span className="text-foreground font-medium">—</span>
+            {[
+              { key: 'consistency', label: 'Consistenta' },
+              { key: 'growth', label: 'Crestere' },
+              { key: 'engagement', label: 'Engagement' },
+              { key: 'reach', label: 'Reach' },
+              { key: 'momentum', label: 'Momentum' },
+            ].map(m => (
+              <div key={m.key} className="flex justify-between text-xs">
+                <span className="text-muted-foreground">{m.label}</span>
+                <span className="text-foreground font-medium">{healthScore?.[m.key] ?? '—'}</span>
               </div>
             ))}
           </div>
           <div className="mt-auto text-xs text-muted-foreground/60">
-            Datele se actualizeaza automat din audit-ul zilnic.
+            AI-ul vede automat datele tale din ultimele 14 zile.
           </div>
         </Card>
       </div>
