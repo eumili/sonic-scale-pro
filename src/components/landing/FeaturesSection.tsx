@@ -1,21 +1,21 @@
 import { Activity, Globe, Mail, Users, Bell, MessageSquare } from 'lucide-react';
 
 const features = [
-  { icon: Activity, title: 'Artist Health Score', desc: 'Un scor unic 0-100 care masoara sanatatea prezentei tale digitale.' },
-  { icon: Globe, title: 'Audit Multi-Platforma', desc: 'YouTube, Spotify, Instagram, TikTok si SoundCloud — toate analizate impreuna.' },
-  { icon: Mail, title: 'Email zilnic personalizat', desc: 'Primesti un raport scurt cu ce s-a schimbat si ce trebuie sa faci.' },
-  { icon: Users, title: 'Benchmark vs similari', desc: 'Compara-te cu artisti la un nivel similar si vezi unde esti in urma.' },
-  { icon: Bell, title: 'Alerte algoritm', desc: 'Fii primul care afla cand se schimba algoritmii pe platformele tale.' },
-  { icon: MessageSquare, title: 'AI Chat contextual', desc: 'Intreaba orice despre datele tale si primesti raspunsuri bazate pe metrici reale.' },
+  { icon: Activity, title: 'Artist Health Score', desc: 'Un scor unic 0-100 care măsoară sănătatea prezenței tale digitale.' },
+  { icon: Globe, title: 'Audit Multi-Platformă', desc: 'YouTube, Spotify, Instagram, TikTok și SoundCloud — toate analizate împreună.' },
+  { icon: Mail, title: 'Email zilnic personalizat', desc: 'Primești un raport scurt cu ce s-a schimbat și ce trebuie să faci.' },
+  { icon: Users, title: 'Benchmark vs similari', desc: 'Compară-te cu artiști la un nivel similar și vezi unde ești în urmă.' },
+  { icon: Bell, title: 'Alerte algoritm', desc: 'Fii primul care află când se schimbă algoritmii pe platformele tale.' },
+  { icon: MessageSquare, title: 'AI Chat contextual', desc: 'Întreabă orice despre datele tale și primești răspunsuri bazate pe metrici reale.' },
 ];
 
 export default function FeaturesSection() {
   return (
     <section id="features" className="py-20 bg-secondary/30">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl font-bold text-center text-foreground mb-4">Features</h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-foreground mb-4">Funcționalități</h2>
         <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto">
-          Tot ce ai nevoie ca sa intelegi, sa cresti si sa dominezi.
+          Tot ce ai nevoie ca să înțelegi, să crești și să dominezi.
         </p>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f, i) => (

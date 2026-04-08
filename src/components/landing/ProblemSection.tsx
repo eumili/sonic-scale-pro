@@ -1,9 +1,9 @@
 import { TrendingDown, Eye, ShieldAlert } from 'lucide-react';
 
 const problems = [
-  { icon: TrendingDown, title: 'Nu stii daca cresti sau stagnezi', desc: 'Datele sunt imprastiate pe 5 platforme diferite. Nimeni nu le pune cap la cap.' },
-  { icon: Eye, title: 'Nu ai vizibilitate reala', desc: 'Vanity metrics nu spun povestea adevarata. Ai nevoie de context si benchmarks.' },
-  { icon: ShieldAlert, title: 'Pierzi oportunitati zilnic', desc: 'Fara alerte si recomandari, algoritmii se schimba si tu nu stii.' },
+  { icon: TrendingDown, title: 'Nu știi dacă crești sau stagnezi', desc: 'Datele sunt împrăștiate pe 5 platforme diferite. Nimeni nu le pune cap la cap.' },
+  { icon: Eye, title: 'Nu ai vizibilitate reală', desc: 'Vanity metrics nu spun povestea adevărată. Ai nevoie de context și benchmarks.' },
+  { icon: ShieldAlert, title: 'Pierzi oportunități zilnic', desc: 'Fără alerte și recomandări, algoritmii se schimbă și tu nu știi.' },
 ];
 
 export default function ProblemSection() {
@@ -12,7 +12,7 @@ export default function ProblemSection() {
       <div className="container mx-auto px-4">
         <h2 className="text-3xl md:text-4xl font-bold text-center text-foreground mb-4">Problema</h2>
         <p className="text-center text-muted-foreground mb-12 max-w-xl mx-auto">
-          Majoritatea artistilor zboara pe pilot automat. Fara date, fara directie.
+          Majoritatea artiștilor zboară pe pilot automat. Fără date, fără direcție.
         </p>
         <div className="grid md:grid-cols-3 gap-6">
           {problems.map((p, i) => (

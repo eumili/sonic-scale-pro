@@ -18,7 +18,7 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!legal) { setError('Trebuie sa accepti termenii si conditiile.'); return; }
+    if (!legal) { setError('Trebuie să accepți termenii și condițiile.'); return; }
     setError('');
     setLoading(true);
     const { error } = await signUp(email, password);
@@ -40,8 +40,8 @@ export default function Register() {
             </div>
             <span className="text-xl font-bold text-foreground">ArtistPulse</span>
           </Link>
-          <h1 className="text-2xl font-bold text-foreground">Creeaza cont gratuit</h1>
-          <p className="text-muted-foreground mt-1">Incepe auditul in 2 minute</p>
+          <h1 className="text-2xl font-bold text-foreground">Creează cont gratuit</h1>
+          <p className="text-muted-foreground mt-1">Începe auditul în 2 minute</p>
         </div>
 
         <form onSubmit={handleSubmit} className="glass-card p-6 space-y-4">
@@ -51,24 +51,24 @@ export default function Register() {
             <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="artist@email.com" required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Parola</Label>
+            <Label htmlFor="password">Parolă</Label>
             <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Minim 6 caractere" required minLength={6} />
           </div>
           <div className="flex items-start gap-2">
             <Checkbox id="legal" checked={legal} onCheckedChange={(c) => setLegal(c === true)} />
             <Label htmlFor="legal" className="text-sm text-muted-foreground leading-tight">
               Accept{' '}
-              <span className="text-primary cursor-pointer">termenii si conditiile</span>{' '}
-              si{' '}
-              <span className="text-primary cursor-pointer">politica de confidentialitate</span>.
+              <span className="text-primary cursor-pointer">termenii și condițiile</span>{' '}
+              și{' '}
+              <span className="text-primary cursor-pointer">politica de confidențialitate</span>.
             </Label>
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? 'Se creeaza contul...' : 'Creeaza cont'}
+            {loading ? 'Se creează contul...' : 'Creează cont'}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             Ai deja cont?{' '}
-            <Link to="/auth/login" className="text-primary hover:underline">Conecteaza-te</Link>
+            <Link to="/auth/login" className="text-primary hover:underline">Conectează-te</Link>
           </p>
         </form>
       </div>
