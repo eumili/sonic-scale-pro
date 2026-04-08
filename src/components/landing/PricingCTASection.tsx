@@ -6,14 +6,14 @@ export default function PricingCTASection() {
   return (
     <section id="pricing" className="py-20">
       <div className="container mx-auto px-4 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Gata sa cresti?</h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Gata să crești?</h2>
         <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
-          Incepe gratuit. Upgrade oricand ai nevoie de mai mult.
+          Începe gratuit. Upgrade oricând ai nevoie de mai mult.
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           <Button asChild size="lg" className="px-8">
             <Link to="/auth/register">
-              Incepe gratuit
+              Începe gratuit
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
           </Button>

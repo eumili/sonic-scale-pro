@@ -1,21 +1,21 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 const faqs = [
-  { q: 'Ce este ArtistPulse?', a: 'ArtistPulse este primul dashboard care iti ofera un audit complet al prezentei tale digitale pe toate platformele de muzica, actualizat zilnic.' },
-  { q: 'Cum se calculeaza Artist Health Score?', a: 'Scorul combina 5 dimensiuni: Consistenta, Crestere, Engagement, Reach si Momentum. Fiecare e analizata pe baza datelor reale de pe platformele tale.' },
-  { q: 'Ce platforme sunt suportate?', a: 'YouTube, Spotify, Instagram, TikTok si SoundCloud. Adaugam constant platforme noi.' },
-  { q: 'Este gratuit?', a: 'Da! Planul Free iti ofera acces la Health Score, un audit de baza si recomandari zilnice. Planurile Pro si Growth deblocheaza analytics avansat si AI Chat.' },
-  { q: 'Cat dureaza configurarea?', a: 'Sub 2 minute. Conectezi platformele, astepti auditul si esti gata.' },
-  { q: 'Datele mele sunt in siguranta?', a: 'Absolut. Folosim criptare end-to-end si nu partajam datele tale cu nimeni.' },
-  { q: 'Pot anula oricand?', a: 'Da, poti anula subscriptia in orice moment din setari. Fara intrebari.' },
-  { q: 'Cum functioneaza AI Chat?', a: 'AI Chat-ul cunoaste toate datele tale si poate raspunde la intrebari specifice despre performanta, tendinte si recomandari.' },
+  { q: 'Ce este ArtistPulse?', a: 'ArtistPulse este primul dashboard care îți oferă un audit complet al prezenței tale digitale pe toate platformele de muzică, actualizat zilnic.' },
+  { q: 'Cum se calculează Artist Health Score?', a: 'Scorul combină 5 dimensiuni: Consistență, Creștere, Engagement, Reach și Momentum. Fiecare e analizată pe baza datelor reale de pe platformele tale.' },
+  { q: 'Ce platforme sunt suportate?', a: 'YouTube, Spotify, Instagram, TikTok și SoundCloud. Adăugăm constant platforme noi.' },
+  { q: 'Este gratuit?', a: 'Da! Planul Free îți oferă acces la Health Score, un audit de bază și recomandări zilnice. Planurile Pro și Growth deblochează analytics avansat și AI Chat.' },
+  { q: 'Cât durează configurarea?', a: 'Sub 2 minute. Conectezi platformele, aștepți auditul și ești gata.' },
+  { q: 'Datele mele sunt în siguranță?', a: 'Absolut. Folosim criptare end-to-end și nu partajăm datele tale cu nimeni.' },
+  { q: 'Pot anula oricând?', a: 'Da, poți anula subscripția în orice moment din setări. Fără întrebări.' },
+  { q: 'Cum funcționează AI Chat?', a: 'AI Chat-ul cunoaște toate datele tale și poate răspunde la întrebări specifice despre performanță, tendințe și recomandări.' },
 ];
 
 export default function FAQSection() {
   return (
     <section className="py-20 bg-secondary/30">
       <div className="container mx-auto px-4 max-w-3xl">
-        <h2 className="text-3xl md:text-4xl font-bold text-center text-foreground mb-12">Intrebari frecvente</h2>
+        <h2 className="text-3xl md:text-4xl font-bold text-center text-foreground mb-12">Întrebări frecvente</h2>
         <Accordion type="single" collapsible className="space-y-2">
           {faqs.map((f, i) => (
             <AccordionItem key={i} value={`faq-${i}`} className="glass-card px-6 border-none">

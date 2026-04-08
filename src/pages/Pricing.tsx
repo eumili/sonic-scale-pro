@@ -44,7 +44,7 @@ export default function Pricing() {
         window.location.href = data.url;
       }
     } catch (err: any) {
-      toast({ title: 'Eroare', description: err.message || 'Nu s-a putut crea sesiunea de plata.', variant: 'destructive' });
+      toast({ title: 'Eroare', description: err.message || 'Nu s-a putut crea sesiunea de plată.', variant: 'destructive' });
     } finally {
       setLoadingPlan(null);
     }
@@ -56,15 +56,15 @@ export default function Pricing() {
       name: 'Free',
       price: '0',
       yearlyPrice: '0',
-      desc: 'Pentru artisti curiosi',
+      desc: 'Pentru artiști curioși',
       features: [
         'Artist Health Score',
-        'Audit de baza zilnic',
-        '3 recomandari pe zi',
+        'Audit de bază zilnic',
+        '3 recomandări pe zi',
         '2 platforme conectate',
         'Analytics 7 zile',
       ],
-      cta: 'Incepe gratuit',
+      cta: 'Începe gratuit',
       highlighted: false,
     },
     {
@@ -73,18 +73,18 @@ export default function Pricing() {
       price: '19',
       yearlyPrice: '190',
       monthlyEquiv: '15.83',
-      desc: 'Pentru artisti seriosi',
+      desc: 'Pentru artiști serioși',
       features: [
         'Tot din Free',
         'Analytics detaliat 90 zile',
-        'Benchmark vs artisti similari',
+        'Benchmark vs artiști similari',
         'AI Chat nelimitat',
-        'Alerte algoritm in timp real',
+        'Alerte algoritm în timp real',
         '5 platforme conectate',
         'Email zilnic personalizat',
         'Export rapoarte PDF',
       ],
-      cta: 'Incepe Pro',
+      cta: 'Începe Pro',
       highlighted: true,
     },
     {
@@ -93,7 +93,7 @@ export default function Pricing() {
       price: '49',
       yearlyPrice: '490',
       monthlyEquiv: '40.83',
-      desc: 'Pentru echipe si manageri',
+      desc: 'Pentru echipe și manageri',
       features: [
         'Tot din Pro',
         'Multi-artist management',
@@ -101,10 +101,10 @@ export default function Pricing() {
         'Rapoarte white-label',
         'Suport prioritar dedicat',
         'Platforme nelimitate',
-        'Dashboard echipa',
+        'Dashboard echipă',
         'Onboarding personalizat',
       ],
-      cta: 'Contacteaza-ne',
+      cta: 'Contactează-ne',
       highlighted: false,
     },
   ];
@@ -118,7 +118,7 @@ export default function Pricing() {
             Planuri simple, rezultate reale
           </h1>
           <p className="text-center text-muted-foreground mb-8 max-w-xl mx-auto">
-            Alege planul potrivit pentru cariera ta. Upgrade sau downgrade oricand, fara angajament.
+            Alege planul potrivit pentru cariera ta. Upgrade sau downgrade oricând, fără angajament.
           </p>
 
           {/* Monthly/Yearly Toggle */}
@@ -152,7 +152,7 @@ export default function Pricing() {
                   <p className="text-sm text-muted-foreground mb-4">{plan.desc}</p>
                   <div className="mb-6">
                     <span className="text-4xl font-bold text-foreground">€{displayPrice}</span>
-                    <span className="text-muted-foreground">/luna</span>
+                    <span className="text-muted-foreground">/lună</span>
                     {yearly && plan.key !== 'free' && (
                       <p className="text-xs text-muted-foreground mt-1">
                         Facturat €{plan.yearlyPrice}/an
@@ -188,7 +188,7 @@ export default function Pricing() {
           </div>
 
           <div className="text-center mt-12 text-sm text-muted-foreground max-w-lg mx-auto">
-            <p>Toate planurile includ acces la dashboard si audit zilnic. Plata se face lunar prin Stripe. Anuleaza oricand.</p>
+            <p>Toate planurile includ acces la dashboard și audit zilnic. Plata se face lunar prin Stripe. Anulează oricând.</p>
           </div>
         </div>
       </section>
