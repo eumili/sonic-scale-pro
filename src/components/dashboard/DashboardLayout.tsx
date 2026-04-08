@@ -1,8 +1,10 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/supabase';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Globe, BarChart3, Lightbulb, MessageSquare, Settings, Music2,
-  Bell, LogOut, CreditCard, ChevronDown,
+  Bell, LogOut, CreditCard, ChevronDown, ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +24,14 @@ export default function DashboardLayout() {
   const { user, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').then(({ data }) => {
+      if (data && data.length > 0) setIsAdmin(true);
+    });
+  }, [user]);
 
   const handleLogout = async () => {
     await signOut();
@@ -58,6 +68,19 @@ export default function DashboardLayout() {
               </Link>
             );
           })}
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors ${
+                location.pathname === '/admin'
+                  ? 'bg-destructive/10 text-destructive font-medium'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              }`}
+            >
+              <ShieldCheck className="h-4 w-4" />
+              Admin
+            </Link>
+          )}
         </nav>
         <div className="mt-auto pt-4 border-t border-border/50">
           <div className="px-3 py-2 rounded-xl bg-primary/5 border border-primary/20">
@@ -100,9 +123,14 @@ export default function DashboardLayout() {
                 <DropdownMenuItem onClick={() => navigate('/dashboard/settings')}>
                   <Settings className="h-4 w-4 mr-2" /> Setari
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/dashboard/settings/billing')}>
+                <DropdownMenuItem onClick={() => navigate('/dashboard/settings')}>
                   <CreditCard className="h-4 w-4 mr-2" /> Billing
                 </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem onClick={() => navigate('/admin')}>
+                    <ShieldCheck className="h-4 w-4 mr-2" /> Admin
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="h-4 w-4 mr-2" /> Deconecteaza-te
