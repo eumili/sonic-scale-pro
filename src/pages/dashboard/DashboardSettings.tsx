@@ -161,8 +161,16 @@ export default function DashboardSettings() {
                   {profile?.plan === 'free' && (
                     <Button asChild><Link to="/pricing">Upgrade la Pro</Link></Button>
                   )}
-                  {profile?.plan !== 'free' && (
-                    <Button variant="outline" onClick={() => toast({ title: 'Stripe Customer Portal', description: 'Coming soon — va fi conectat la Stripe.' })}>
+              {profile?.plan !== 'free' && (
+                    <Button variant="outline" onClick={async () => {
+                      try {
+                        const { data, error } = await supabase.functions.invoke('create-portal-session');
+                        if (error) throw error;
+                        if (data?.url) window.location.href = data.url;
+                      } catch (err: any) {
+                        toast({ title: 'Eroare', description: err.message || 'Nu s-a putut deschide portalul.', variant: 'destructive' });
+                      }
+                    }}>
                       Gestioneaza subscriptia
                     </Button>
                   )}
