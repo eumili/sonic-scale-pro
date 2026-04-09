@@ -176,14 +176,14 @@ export default function Recommendations() {
       });
     }
 
-    if (healthScore && healthScore.total_score < 50) {
+    if (healthScore && healthScore.overall_score < 50) {
       generated.push({
         id: `general-health-${Date.now()}`,
         platform: 'general',
         category: 'strategy',
         priority: 'high',
         recommendation: 'Focus pe consistenta — posteaza pe cel putin 2 platforme pe zi',
-        reasoning: `Scorul tau de sanatate este ${healthScore.total_score}/100. Consistenta in postare este cel mai rapid mod de a-l creste.`,
+        reasoning: `Scorul tau de sanatate este ${healthScore.overall_score}/100. Consistenta in postare este cel mai rapid mod de a-l creste.`,
         created_at: new Date().toISOString(),
       });
     }
@@ -225,7 +225,7 @@ export default function Recommendations() {
           <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 border border-primary/20">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium text-foreground">
-              Health Score: {healthScore.total_score}/100
+              Health Score: {healthScore.overall_score}/100
             </span>
           </div>
         )}

@@ -186,12 +186,12 @@ export default function DashboardOverview() {
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="glass-card p-6 flex flex-col items-center">
           <h2 className="text-lg font-semibold text-foreground mb-4">Artist Health Score</h2>
-          <HealthScoreCircle score={healthScore?.total_score || 0} />
+          <HealthScoreCircle score={healthScore?.overall_score || 0} />
           <p className="text-sm text-muted-foreground mt-3">
             {healthScore
-              ? healthScore.total_score >= 70
+              ? healthScore.overall_score >= 70
                 ? 'Scor bun! Continua asa si focus pe zonele slabe.'
-                : healthScore.total_score >= 40
+                : healthScore.overall_score >= 40
                 ? 'Scor mediu. Urmeaza recomandarile pentru a creste.'
                 : 'Scor scazut. Conecteaza mai multe platforme si posteaza constant.'
               : 'Scorul se calculeaza dupa prima colectare de date.'}

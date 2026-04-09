@@ -192,7 +192,7 @@ export default function AIChat() {
           <h3 className="text-sm font-semibold text-foreground">Context</h3>
           <div className="glass-card p-3 text-center">
             <p className="text-xs text-muted-foreground mb-1">Health Score</p>
-            <p className="text-3xl font-bold text-primary">{healthScore?.total_score ?? '—'}</p>
+            <p className="text-3xl font-bold text-primary">{healthScore?.overall_score ?? '—'}</p>
           </div>
           <div className="space-y-2">
             {[
