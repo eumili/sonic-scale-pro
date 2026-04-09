@@ -253,14 +253,82 @@ Deno.serve(async (req) => {
           .eq("metric_date", today)
           .single();
 
+        // ── Store individual content BEFORE the follower guard ──
+        // YouTube videos
+        if (plat.platform === "youtube" && metrics._videos?.length > 0) {
+          for (const video of metrics._videos) {
+            const { data: prevVideo } = await supabase
+              .from("youtube_videos")
+              .select("view_count")
+              .eq("user_id", plat.user_id)
+              .eq("video_id", video.video_id)
+              .lt("collected_at", today)
+              .order("collected_at", { ascending: false })
+              .limit(1)
+              .single();
+
+            const prevViews = prevVideo?.view_count || 0;
+            const growthPct = prevViews > 0 ? ((video.view_count - prevViews) / prevViews * 100) : 0;
+
+            await supabase.from("youtube_videos").upsert({
+              user_id: plat.user_id,
+              video_id: video.video_id,
+              title: video.title,
+              published_at: video.published_at,
+              thumbnail_url: video.thumbnail_url,
+              view_count: video.view_count,
+              like_count: video.like_count,
+              comment_count: video.comment_count,
+              view_count_prev: prevViews,
+              growth_pct: parseFloat(growthPct.toFixed(2)),
+              collected_at: today,
+            }, { onConflict: "user_id,video_id,collected_at" });
+          }
+          console.log(`Stored ${metrics._videos.length} YouTube videos for user ${plat.user_id}`);
+        }
+
+        // Spotify tracks
+        if (plat.platform === "spotify" && metrics._tracks?.length > 0) {
+          for (const track of metrics._tracks) {
+            const { data: prevTrack } = await supabase
+              .from("spotify_tracks")
+              .select("popularity")
+              .eq("user_id", plat.user_id)
+              .eq("track_id", track.track_id)
+              .lt("collected_at", today)
+              .order("collected_at", { ascending: false })
+              .limit(1)
+              .single();
+
+            const prevPop = prevTrack?.popularity || 0;
+            const growthPct = prevPop > 0 ? ((track.popularity - prevPop) / prevPop * 100) : 0;
+
+            await supabase.from("spotify_tracks").upsert({
+              user_id: plat.user_id,
+              track_id: track.track_id,
+              track_name: track.track_name,
+              album_name: track.album_name,
+              album_image_url: track.album_image_url,
+              popularity: track.popularity,
+              popularity_prev: prevPop,
+              growth_pct: parseFloat(growthPct.toFixed(2)),
+              duration_ms: track.duration_ms,
+              collected_at: today,
+            }, { onConflict: "user_id,track_id,collected_at" });
+          }
+          console.log(`Stored ${metrics._tracks.length} Spotify tracks for user ${plat.user_id}`);
+        }
+
         // GUARD: Don't overwrite good data with zeros (API rate limit / error)
         if (existing && existing.followers > 0 && (metrics.followers || 0) === 0) {
-          console.log(`Skipping update for ${plat.platform}: new followers=0 but existing=${existing.followers} (likely API error)`);
+          console.log(`Skipping metrics update for ${plat.platform}: new followers=0 but existing=${existing.followers} (likely API error)`);
           results.push({
             platform: plat.platform,
             success: true,
             followers: existing.followers,
-            error: "Skipped update: API returned 0 followers, keeping existing data",
+            videos: metrics._videos?.length || 0,
+            tracks: metrics._tracks?.length || 0,
+            error: "Skipped metrics update: API returned 0 followers, keeping existing data (content still stored)",
           });
           continue;
         }
@@ -317,73 +385,6 @@ Deno.serve(async (req) => {
           .from("artist_platforms")
           .update({ last_collected_at: new Date().toISOString() })
           .eq("id", plat.id);
-
-        // ── Store individual YouTube videos ──
-        if (plat.platform === "youtube" && metrics._videos?.length > 0) {
-          for (const video of metrics._videos) {
-            // Get yesterday's view count for growth calculation
-            const { data: prevVideo } = await supabase
-              .from("youtube_videos")
-              .select("view_count")
-              .eq("user_id", plat.user_id)
-              .eq("video_id", video.video_id)
-              .lt("collected_at", today)
-              .order("collected_at", { ascending: false })
-              .limit(1)
-              .single();
-
-            const prevViews = prevVideo?.view_count || 0;
-            const growthPct = prevViews > 0 ? ((video.view_count - prevViews) / prevViews * 100) : 0;
-
-            await supabase.from("youtube_videos").upsert({
-              user_id: plat.user_id,
-              video_id: video.video_id,
-              title: video.title,
-              published_at: video.published_at,
-              thumbnail_url: video.thumbnail_url,
-              view_count: video.view_count,
-              like_count: video.like_count,
-              comment_count: video.comment_count,
-              view_count_prev: prevViews,
-              growth_pct: parseFloat(growthPct.toFixed(2)),
-              collected_at: today,
-            }, { onConflict: "user_id,video_id,collected_at" });
-          }
-          console.log(`Stored ${metrics._videos.length} YouTube videos for user ${plat.user_id}`);
-        }
-
-        // ── Store individual Spotify tracks ──
-        if (plat.platform === "spotify" && metrics._tracks?.length > 0) {
-          for (const track of metrics._tracks) {
-            // Get yesterday's popularity for growth calculation
-            const { data: prevTrack } = await supabase
-              .from("spotify_tracks")
-              .select("popularity")
-              .eq("user_id", plat.user_id)
-              .eq("track_id", track.track_id)
-              .lt("collected_at", today)
-              .order("collected_at", { ascending: false })
-              .limit(1)
-              .single();
-
-            const prevPop = prevTrack?.popularity || 0;
-            const growthPct = prevPop > 0 ? ((track.popularity - prevPop) / prevPop * 100) : 0;
-
-            await supabase.from("spotify_tracks").upsert({
-              user_id: plat.user_id,
-              track_id: track.track_id,
-              track_name: track.track_name,
-              album_name: track.album_name,
-              album_image_url: track.album_image_url,
-              popularity: track.popularity,
-              popularity_prev: prevPop,
-              growth_pct: parseFloat(growthPct.toFixed(2)),
-              duration_ms: track.duration_ms,
-              collected_at: today,
-            }, { onConflict: "user_id,track_id,collected_at" });
-          }
-          console.log(`Stored ${metrics._tracks.length} Spotify tracks for user ${plat.user_id}`);
-        }
 
         results.push({
           platform: plat.platform,
