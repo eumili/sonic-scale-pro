@@ -42,10 +42,10 @@ export default function Platforms() {
     if (!user) return;
     supabase
       .from('artist_platforms')
-      .select('id, platform, url, is_active')
+      .select('id, platform, platform_url, is_active')
       .eq('user_id', user.id)
       .then(({ data }) => {
-        if (data) setConnected(data);
+        if (data) setConnected(data.map(d => ({ ...d, url: d.platform_url })));
         setLoading(false);
       });
   }, [user]);
@@ -64,7 +64,7 @@ export default function Platforms() {
       const { error } = await supabase.from('artist_platforms').upsert({
         user_id: user!.id,
         platform: platform.key,
-        url,
+        platform_url: url,
         is_active: true,
       }, { onConflict: 'user_id,platform' });
 
@@ -73,7 +73,7 @@ export default function Platforms() {
         const { error: insertError } = await supabase.from('artist_platforms').insert({
           user_id: user!.id,
           platform: platform.key,
-          url,
+          platform_url: url,
           is_active: true,
         });
         if (insertError) {
@@ -97,7 +97,7 @@ export default function Platforms() {
       const { error } = await supabase.from('artist_platforms').insert({
         user_id: user!.id,
         platform: platform.key,
-        url,
+        platform_url: url,
         is_active: true,
       });
       if (error) {

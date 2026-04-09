@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Loader2, CheckCircle2 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import Navbar from '@/components/landing/Navbar';
@@ -25,8 +25,21 @@ const PRICES = {
 export default function Pricing() {
   const [yearly, setYearly] = useState(false);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [currentPlan, setCurrentPlan] = useState<string>('free');
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('profiles')
+      .select('plan')
+      .eq('id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.plan) setCurrentPlan(data.plan);
+      });
+  }, [user]);
 
   const handleCheckout = async (plan: 'pro' | 'agency') => {
     if (!user) {
@@ -167,7 +180,12 @@ export default function Pricing() {
                       </li>
                     ))}
                   </ul>
-                  {plan.key === 'free' ? (
+                  {currentPlan === plan.key ? (
+                    <Button variant="outline" className="w-full border-primary/50 text-primary" disabled>
+                      <CheckCircle2 className="h-4 w-4 mr-2" />
+                      Planul tău curent
+                    </Button>
+                  ) : plan.key === 'free' ? (
                     <Button variant="outline" className="w-full" asChild>
                       <Link to="/auth/register">{plan.cta}</Link>
                     </Button>

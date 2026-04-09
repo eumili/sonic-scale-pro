@@ -30,11 +30,11 @@ Deno.serve(async (req) => {
     // Check subscription
     const { data: profile } = await supabase
       .from("profiles")
-      .select("artist_name, subscription_tier")
+      .select("artist_name, plan")
       .eq("id", user.id)
       .single();
 
-    const tier = profile?.subscription_tier || "free";
+    const tier = profile?.plan || "free";
     if (!["pro", "agency"].includes(tier)) {
       return new Response(JSON.stringify({ error: "upgrade_required" }), { status: 402, headers: _corsHeaders });
     }

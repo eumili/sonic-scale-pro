@@ -39,11 +39,11 @@ Deno.serve(async (req) => {
     // Find or create Stripe customer
     const { data: profile } = await supabase
       .from("profiles")
-      .select("stripe_customer_id")
+      .select("customer_id")
       .eq("id", user.id)
       .single();
 
-    let customerId = profile?.stripe_customer_id;
+    let customerId = profile?.customer_id;
 
     if (!customerId) {
       const customer = await stripe.customers.create({
@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
         metadata: { user_id: user.id },
       });
       customerId = customer.id;
-      await supabase.from("profiles").update({ stripe_customer_id: customerId }).eq("id", user.id);
+      await supabase.from("profiles").update({ customer_id: customerId }).eq("id", user.id);
     }
 
     const session = await stripe.checkout.sessions.create({

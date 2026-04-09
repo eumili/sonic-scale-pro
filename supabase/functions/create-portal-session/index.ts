@@ -32,16 +32,16 @@ Deno.serve(async (req) => {
 
     const { data: profile } = await supabase
       .from("profiles")
-      .select("stripe_customer_id")
+      .select("customer_id")
       .eq("id", user.id)
       .single();
 
-    if (!profile?.stripe_customer_id) {
+    if (!profile?.customer_id) {
       return new Response(JSON.stringify({ error: "No Stripe customer found" }), { status: 400, headers: _corsHeaders });
     }
 
     const session = await stripe.billingPortal.sessions.create({
-      customer: profile.stripe_customer_id,
+      customer: profile.customer_id,
       return_url: `${req.headers.get("origin")}/dashboard/settings`,
     });
 
