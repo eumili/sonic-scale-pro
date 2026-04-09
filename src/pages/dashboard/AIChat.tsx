@@ -196,11 +196,11 @@ export default function AIChat() {
           </div>
           <div className="space-y-2">
             {[
-              { key: 'consistency', label: 'Consistenta' },
-              { key: 'growth', label: 'Crestere' },
-              { key: 'engagement', label: 'Engagement' },
-              { key: 'reach', label: 'Reach' },
-              { key: 'momentum', label: 'Momentum' },
+              { key: 'consistency_score', label: 'Consistenta' },
+              { key: 'growth_score', label: 'Crestere' },
+              { key: 'engagement_score', label: 'Engagement' },
+              { key: 'reach_score', label: 'Reach' },
+              { key: 'momentum_score', label: 'Momentum' },
             ].map(m => (
               <div key={m.key} className="flex justify-between text-xs">
                 <span className="text-muted-foreground">{m.label}</span>

@@ -128,11 +128,11 @@ export default function DashboardOverview() {
   const subscores = useMemo(() => {
     if (!healthScore) return [];
     return [
-      { label: 'Consistenta', value: healthScore.consistency || 0, max: 100 },
-      { label: 'Crestere', value: healthScore.growth || 0, max: 100 },
-      { label: 'Engagement', value: healthScore.engagement || 0, max: 100 },
-      { label: 'Reach', value: healthScore.reach || 0, max: 100 },
-      { label: 'Momentum', value: healthScore.momentum || 0, max: 100 },
+      { label: 'Consistenta', value: healthScore.consistency_score || 0, max: 100 },
+      { label: 'Crestere', value: healthScore.growth_score || 0, max: 100 },
+      { label: 'Engagement', value: healthScore.engagement_score || 0, max: 100 },
+      { label: 'Reach', value: healthScore.reach_score || 0, max: 100 },
+      { label: 'Momentum', value: healthScore.momentum_score || 0, max: 100 },
     ];
   }, [healthScore]);
 
@@ -319,17 +319,19 @@ export default function DashboardOverview() {
         </div>
         <div className="glass-card p-6 relative overflow-hidden">
           <h2 className="text-lg font-semibold text-foreground mb-4">Benchmark vs similari</h2>
-          <div className="space-y-3 blur-sm select-none">
+          <div className={`space-y-3 ${profile?.plan === 'free' ? 'blur-sm select-none' : ''}`}>
             <div className="bg-muted rounded-xl p-3"><p className="text-sm text-foreground">Scor mediu gen: 68</p></div>
             <div className="bg-muted rounded-xl p-3"><p className="text-sm text-foreground">Top 10% engagement: 5.2%</p></div>
             <div className="bg-muted rounded-xl p-3"><p className="text-sm text-foreground">Crestere medie: +8%/luna</p></div>
           </div>
-          <div className="absolute inset-0 flex items-center justify-center bg-card/60 backdrop-blur-sm">
-            <div className="text-center">
-              <p className="font-semibold text-foreground mb-2">Disponibil in Pro</p>
-              <Button size="sm" asChild><a href="/pricing">Upgrade</a></Button>
+          {profile?.plan === 'free' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-card/60 backdrop-blur-sm">
+              <div className="text-center">
+                <p className="font-semibold text-foreground mb-2">Disponibil in Pro</p>
+                <Button size="sm" asChild><a href="/pricing">Upgrade</a></Button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
