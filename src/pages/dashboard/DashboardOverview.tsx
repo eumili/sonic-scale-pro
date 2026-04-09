@@ -166,17 +166,42 @@ export default function DashboardOverview() {
   const activePlatforms = useMemo(() => [...new Set(metrics.map(m => m.platform))], [metrics]);
 
   const kpis = useMemo(() => {
-    if (metrics.length === 0) return { followers: 0, engagement: 0, views: 0, activity: 0 };
+    if (metrics.length === 0) return { followers: 0, engagement: 0, views: 0, activity: 0, followerGrowth: 0, engagementGrowth: 0, viewsGrowth: 0, daysSinceLastPost: 0 };
     const latest: Record<string, any> = {};
+    const earliest: Record<string, any> = {};
     metrics.forEach(m => {
       if (!latest[m.platform] || m.metric_date > latest[m.platform].metric_date) latest[m.platform] = m;
+      if (!earliest[m.platform] || m.metric_date < earliest[m.platform].metric_date) earliest[m.platform] = m;
     });
-    const vals = Object.values(latest);
+    const latestVals = Object.values(latest);
+    const totalFollowers = latestVals.reduce((s, v) => s + (v.followers || 0), 0);
+    const totalViews = latestVals.reduce((s, v) => s + (v.total_views || 0), 0);
+    const avgEngagement = latestVals.length ? latestVals.reduce((s, v) => s + (parseFloat(v.engagement_rate) || 0), 0) / latestVals.length : 0;
+
+    // Calculate growth percentages from earliest to latest in period
+    const earliestFollowers = Object.values(earliest).reduce((s, v) => s + (v.followers || 0), 0);
+    const earliestViews = Object.values(earliest).reduce((s, v) => s + (v.total_views || 0), 0);
+    const earliestEngagement = Object.values(earliest).length ? Object.values(earliest).reduce((s, v) => s + (parseFloat(v.engagement_rate) || 0), 0) / Object.values(earliest).length : 0;
+
+    const followerGrowth = earliestFollowers > 0 ? ((totalFollowers - earliestFollowers) / earliestFollowers * 100) : 0;
+    const viewsGrowth = earliestViews > 0 ? ((totalViews - earliestViews) / earliestViews * 100) : 0;
+    const engagementGrowth = earliestEngagement > 0 ? ((avgEngagement - earliestEngagement) / earliestEngagement * 100) : 0;
+
+    // Days since last post: check latest days_since_last_post or calculate from data
+    const daysSinceLastPost = latestVals.reduce((min, v) => {
+      const d = v.days_since_last_post || 0;
+      return d > 0 && (min === 0 || d < min) ? d : min;
+    }, 0);
+
     return {
-      followers: vals.reduce((s, v) => s + (v.followers || 0), 0),
-      engagement: vals.length ? vals.reduce((s, v) => s + (parseFloat(v.engagement_rate) || 0), 0) / vals.length : 0,
-      views: vals.reduce((s, v) => s + (v.total_views || 0), 0),
-      activity: vals.reduce((s, v) => s + (v.posts_count || 0) + (v.videos_count || 0), 0),
+      followers: totalFollowers,
+      engagement: avgEngagement,
+      views: totalViews,
+      activity: latestVals.reduce((s, v) => s + (v.posts_count || 0) + (v.videos_count || 0), 0),
+      followerGrowth: parseFloat(followerGrowth.toFixed(1)),
+      engagementGrowth: parseFloat(engagementGrowth.toFixed(1)),
+      viewsGrowth: parseFloat(viewsGrowth.toFixed(1)),
+      daysSinceLastPost,
     };
   }, [metrics]);
 
@@ -263,16 +288,22 @@ export default function DashboardOverview() {
           <div className="glass-card p-4 flex flex-col items-center justify-center text-center backdrop-blur-lg">
             <span className="text-xs text-muted-foreground mb-1">Total Reach</span>
             <span className="text-2xl font-bold text-foreground">{formatNumber(kpis.followers)}</span>
-            <span className="text-xs text-success flex items-center gap-0.5 mt-1">
-              <ArrowUp className="h-3 w-3" /> +4.8%
-            </span>
+            {kpis.followerGrowth !== 0 && (
+              <span className={`text-xs flex items-center gap-0.5 mt-1 ${kpis.followerGrowth >= 0 ? 'text-success' : 'text-destructive'}`}>
+                <ArrowUp className={`h-3 w-3 ${kpis.followerGrowth < 0 ? 'rotate-180' : ''}`} />
+                {kpis.followerGrowth >= 0 ? '+' : ''}{kpis.followerGrowth}%
+              </span>
+            )}
           </div>
           <div className="glass-card p-4 flex flex-col items-center justify-center text-center backdrop-blur-lg">
             <span className="text-xs text-muted-foreground mb-1">Engagement Rate</span>
             <span className="text-2xl font-bold text-foreground">{kpis.engagement.toFixed(1)}%</span>
-            <span className="text-xs text-success flex items-center gap-0.5 mt-1">
-              <ArrowUp className="h-3 w-3" /> +1.2%
-            </span>
+            {kpis.engagementGrowth !== 0 && (
+              <span className={`text-xs flex items-center gap-0.5 mt-1 ${kpis.engagementGrowth >= 0 ? 'text-success' : 'text-destructive'}`}>
+                <ArrowUp className={`h-3 w-3 ${kpis.engagementGrowth < 0 ? 'rotate-180' : ''}`} />
+                {kpis.engagementGrowth >= 0 ? '+' : ''}{kpis.engagementGrowth}%
+              </span>
+            )}
           </div>
           {/* Momentum — large prominent text + big arrow */}
           <div className="glass-card p-4 flex flex-col items-center justify-center text-center backdrop-blur-lg">
@@ -282,8 +313,13 @@ export default function DashboardOverview() {
           </div>
           <div className="glass-card p-4 flex flex-col items-center justify-center text-center backdrop-blur-lg">
             <span className="text-xs text-muted-foreground mb-1">Days Since Last Post</span>
-            <span className="text-3xl font-bold text-foreground">{kpis.activity > 0 ? '2' : '—'}</span>
-            <span className="text-xs font-medium text-foreground uppercase tracking-wider">Days</span>
+            <span className={`text-3xl font-bold ${kpis.daysSinceLastPost > 3 ? 'text-destructive' : kpis.daysSinceLastPost > 1 ? 'text-primary' : 'text-foreground'}`}>
+              {kpis.daysSinceLastPost > 0 ? kpis.daysSinceLastPost : '—'}
+            </span>
+            {kpis.daysSinceLastPost > 3 && <AlertTriangle className="h-4 w-4 text-destructive mt-1" />}
+            {kpis.daysSinceLastPost > 0 && kpis.daysSinceLastPost <= 3 && (
+              <span className="text-xs font-medium text-foreground uppercase tracking-wider">Days</span>
+            )}
           </div>
         </div>
       </div>
@@ -348,14 +384,14 @@ export default function DashboardOverview() {
               </thead>
               <tbody className="divide-y divide-border/20">
                 {[
-                  { label: 'Audience Growth', artist: '+4.8%', avg: '+1.8%' },
-                  { label: 'Engagement', artist: `${kpis.engagement.toFixed(1)}%`, avg: '+1.2%' },
-                  { label: 'Reach', artist: formatNumber(kpis.views || 82000000), avg: '+1.2%' },
-                  { label: 'Streams', artist: `+${formatNumber(kpis.followers || 1200000)}`, avg: '-1.6%' },
+                  { label: 'Audience Growth', artist: `${kpis.followerGrowth >= 0 ? '+' : ''}${kpis.followerGrowth}%`, avg: '+1.8%', positive: kpis.followerGrowth >= 1.8 },
+                  { label: 'Engagement', artist: `${kpis.engagement.toFixed(1)}%`, avg: '3.5%', positive: kpis.engagement >= 3.5 },
+                  { label: 'Reach', artist: formatNumber(kpis.views), avg: formatNumber(50000), positive: kpis.views >= 50000 },
+                  { label: 'Streams', artist: formatNumber(kpis.followers), avg: formatNumber(10000), positive: kpis.followers >= 10000 },
                 ].map(row => (
                   <tr key={row.label}>
                     <td className="py-2.5 text-foreground">{row.label}</td>
-                    <td className="py-2.5 text-right text-success font-medium">{row.artist}</td>
+                    <td className={`py-2.5 text-right font-medium ${row.positive ? 'text-success' : 'text-destructive'}`}>{row.artist}</td>
                     <td className="py-2.5 text-right text-muted-foreground">{row.avg}</td>
                   </tr>
                 ))}

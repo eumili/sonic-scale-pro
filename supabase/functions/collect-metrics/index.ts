@@ -10,121 +10,107 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
 );
 
-// ─── YouTube ───────────────────────────────────────────────
-async function collectYouTube(platformUrl: string) {
-  const apiKey = Deno.env.get("YOUTUBE_API_KEY");
-  if (!apiKey) { console.error("No YOUTUBE_API_KEY"); return null; }
-
-  // Extract handle or channel ID from URL
-  let channelId = "";
+// ─── Helper: resolve YouTube channel ID from URL ──────────
+async function resolveYouTubeChannelId(platformUrl: string, apiKey: string): Promise<{ channelId: string; channelData: any } | null> {
   const handleMatch = platformUrl.match(/@([\w.-]+)/);
   const channelIdMatch = platformUrl.match(/channel\/(UC[\w-]+)/);
 
   if (handleMatch) {
     const handle = handleMatch[1];
-    console.log("YouTube: Trying to resolve handle:", handle, "from URL:", platformUrl);
+    console.log("YouTube: Trying to resolve handle:", handle);
 
     // Try forHandle first
-    let searchRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&forHandle=${handle}&key=${apiKey}`
-    );
-    let searchData = await searchRes.json();
-    console.log("YouTube forHandle response status:", searchRes.status, "items:", searchData.items?.length || 0);
-    if (searchData.error) {
-      console.error("YouTube API error:", JSON.stringify(searchData.error));
+    let res = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&forHandle=${handle}&key=${apiKey}`);
+    let data = await res.json();
+    if (data.items?.length > 0 && data.items[0].statistics) {
+      return { channelId: data.items[0].id, channelData: data.items[0] };
     }
 
-    // If forHandle returns items with statistics, return directly
-    if (searchData.items?.length > 0 && searchData.items[0].statistics) {
-      const ch = searchData.items[0];
-      const stats = ch.statistics;
-      console.log("YouTube forHandle SUCCESS:", stats.subscriberCount, "subscribers");
-      return {
-        followers: parseInt(stats.subscriberCount) || 0,
-        subscribers: parseInt(stats.subscriberCount) || 0,
-        total_views: parseInt(stats.viewCount) || 0,
-        videos_count: parseInt(stats.videoCount) || 0,
-        engagement_rate: 0,
-        raw_data: { channel: ch },
-      };
-    }
-
-    // Fallback: try search endpoint
-    console.log("forHandle returned no items, trying search endpoint for:", handle);
-    searchRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(handle)}&maxResults=1&key=${apiKey}`
-    );
-    searchData = await searchRes.json();
-    console.log("YouTube search response status:", searchRes.status, "items:", searchData.items?.length || 0);
-    if (searchData.error) {
-      console.error("YouTube search API error:", JSON.stringify(searchData.error));
-    }
-
-    if (searchData.items?.length > 0) {
-      channelId = searchData.items[0].snippet?.channelId || searchData.items[0].id?.channelId;
-      console.log("YouTube search found channelId:", channelId);
-      if (channelId) {
-        // Now fetch full channel stats
-        const chRes = await fetch(
-          `https://www.googleapis.com/youtube/v3/channels?part=statistics,contentDetails,snippet&id=${channelId}&key=${apiKey}`
-        );
+    // Fallback: search
+    res = await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(handle)}&maxResults=1&key=${apiKey}`);
+    data = await res.json();
+    if (data.items?.length > 0) {
+      const cid = data.items[0].snippet?.channelId || data.items[0].id?.channelId;
+      if (cid) {
+        const chRes = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics,contentDetails,snippet&id=${cid}&key=${apiKey}`);
         const chData = await chRes.json();
-        if (chData.items?.length > 0) {
-          const ch = chData.items[0];
-          const stats = ch.statistics;
-          console.log("YouTube channel stats SUCCESS:", stats.subscriberCount, "subscribers");
-          return {
-            followers: parseInt(stats.subscriberCount) || 0,
-            subscribers: parseInt(stats.subscriberCount) || 0,
-            total_views: parseInt(stats.viewCount) || 0,
-            videos_count: parseInt(stats.videoCount) || 0,
-            engagement_rate: 0,
-            raw_data: { channel: ch },
-          };
-        }
+        if (chData.items?.length > 0) return { channelId: cid, channelData: chData.items[0] };
       }
     }
 
-    // Last fallback: try forUsername (some older channels)
-    console.log("Search also failed, trying forUsername for:", handle);
-    const usernameRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&forUsername=${handle}&key=${apiKey}`
-    );
-    const usernameData = await usernameRes.json();
-    if (usernameData.items?.length > 0) {
-      const ch = usernameData.items[0];
-      const stats = ch.statistics;
-      console.log("YouTube forUsername SUCCESS:", stats.subscriberCount, "subscribers");
-      return {
-        followers: parseInt(stats.subscriberCount) || 0,
-        subscribers: parseInt(stats.subscriberCount) || 0,
-        total_views: parseInt(stats.viewCount) || 0,
-        videos_count: parseInt(stats.videoCount) || 0,
-        engagement_rate: 0,
-        raw_data: { channel: ch },
-      };
-    }
+    // Fallback: forUsername
+    res = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&forUsername=${handle}&key=${apiKey}`);
+    data = await res.json();
+    if (data.items?.length > 0) return { channelId: data.items[0].id, channelData: data.items[0] };
   } else if (channelIdMatch) {
-    channelId = channelIdMatch[1];
-    const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/channels?part=statistics,contentDetails&id=${channelId}&key=${apiKey}`
-    );
+    const cid = channelIdMatch[1];
+    const res = await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics,contentDetails,snippet&id=${cid}&key=${apiKey}`);
     const data = await res.json();
-    if (data.items?.length > 0) {
-      const stats = data.items[0].statistics;
-      return {
-        followers: parseInt(stats.subscriberCount) || 0,
-        subscribers: parseInt(stats.subscriberCount) || 0,
-        total_views: parseInt(stats.viewCount) || 0,
-        videos_count: parseInt(stats.videoCount) || 0,
-        engagement_rate: 0,
-        raw_data: { channel: data.items[0] },
-      };
-    }
+    if (data.items?.length > 0) return { channelId: cid, channelData: data.items[0] };
   }
 
-  console.error("Could not resolve YouTube channel from URL:", platformUrl);
   return null;
+}
+
+// ─── YouTube: fetch individual video stats ────────────────
+async function fetchYouTubeVideos(channelId: string, apiKey: string): Promise<any[]> {
+  try {
+    // Get latest 20 videos from the channel
+    const searchRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&order=date&type=video&maxResults=20&key=${apiKey}`
+    );
+    const searchData = await searchRes.json();
+    if (!searchData.items?.length) return [];
+
+    const videoIds = searchData.items.map((v: any) => v.id.videoId).join(",");
+    const statsRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=statistics,snippet&id=${videoIds}&key=${apiKey}`
+    );
+    const statsData = await statsRes.json();
+
+    return (statsData.items || []).map((v: any) => ({
+      video_id: v.id,
+      title: v.snippet?.title || "",
+      published_at: v.snippet?.publishedAt || null,
+      thumbnail_url: v.snippet?.thumbnails?.medium?.url || v.snippet?.thumbnails?.default?.url || "",
+      view_count: parseInt(v.statistics?.viewCount) || 0,
+      like_count: parseInt(v.statistics?.likeCount) || 0,
+      comment_count: parseInt(v.statistics?.commentCount) || 0,
+    }));
+  } catch (err) {
+    console.error("fetchYouTubeVideos error:", err);
+    return [];
+  }
+}
+
+// ─── YouTube ───────────────────────────────────────────────
+async function collectYouTube(platformUrl: string) {
+  const apiKey = Deno.env.get("YOUTUBE_API_KEY");
+  if (!apiKey) { console.error("No YOUTUBE_API_KEY"); return null; }
+
+  const resolved = await resolveYouTubeChannelId(platformUrl, apiKey);
+  if (!resolved) {
+    console.error("Could not resolve YouTube channel from URL:", platformUrl);
+    return null;
+  }
+
+  const { channelId, channelData } = resolved;
+  const stats = channelData.statistics;
+  console.log("YouTube SUCCESS:", stats.subscriberCount, "subscribers, channelId:", channelId);
+
+  // Fetch individual video stats
+  const videos = await fetchYouTubeVideos(channelId, apiKey);
+  console.log("YouTube videos fetched:", videos.length);
+
+  return {
+    followers: parseInt(stats.subscriberCount) || 0,
+    subscribers: parseInt(stats.subscriberCount) || 0,
+    total_views: parseInt(stats.viewCount) || 0,
+    videos_count: parseInt(stats.videoCount) || 0,
+    engagement_rate: 0,
+    raw_data: { channel: channelData },
+    _videos: videos, // individual video data to store separately
+  };
 }
 
 // ─── Spotify ───────────────────────────────────────────────
@@ -175,6 +161,16 @@ async function collectSpotify(platformUrl: string) {
   const totalPopularity = topTracks.tracks?.reduce((s: number, t: any) => s + (t.popularity || 0), 0) || 0;
   const avgPopularity = topTracks.tracks?.length ? totalPopularity / topTracks.tracks.length : 0;
 
+  // Build individual track data for storage
+  const trackItems = (topTracks.tracks || []).map((t: any) => ({
+    track_id: t.id,
+    track_name: t.name,
+    album_name: t.album?.name || "",
+    album_image_url: t.album?.images?.[0]?.url || "",
+    popularity: t.popularity || 0,
+    duration_ms: t.duration_ms || 0,
+  }));
+
   return {
     followers: artist.followers?.total || 0,
     monthly_listeners: 0, // Not available via public API
@@ -184,9 +180,10 @@ async function collectSpotify(platformUrl: string) {
     playlist_count: 0,
     raw_data: {
       artist: { name: artist.name, popularity: artist.popularity, genres: artist.genres },
-      top_tracks: topTracks.tracks?.slice(0, 5).map((t: any) => ({ name: t.name, popularity: t.popularity })),
+      top_tracks: topTracks.tracks?.slice(0, 10).map((t: any) => ({ name: t.name, popularity: t.popularity, id: t.id })),
       albums_count: albums?.total || 0,
     },
+    _tracks: trackItems, // individual track data to store separately
   };
 }
 
@@ -321,10 +318,79 @@ Deno.serve(async (req) => {
           .update({ last_collected_at: new Date().toISOString() })
           .eq("id", plat.id);
 
+        // ── Store individual YouTube videos ──
+        if (plat.platform === "youtube" && metrics._videos?.length > 0) {
+          for (const video of metrics._videos) {
+            // Get yesterday's view count for growth calculation
+            const { data: prevVideo } = await supabase
+              .from("youtube_videos")
+              .select("view_count")
+              .eq("user_id", plat.user_id)
+              .eq("video_id", video.video_id)
+              .lt("collected_at", today)
+              .order("collected_at", { ascending: false })
+              .limit(1)
+              .single();
+
+            const prevViews = prevVideo?.view_count || 0;
+            const growthPct = prevViews > 0 ? ((video.view_count - prevViews) / prevViews * 100) : 0;
+
+            await supabase.from("youtube_videos").upsert({
+              user_id: plat.user_id,
+              video_id: video.video_id,
+              title: video.title,
+              published_at: video.published_at,
+              thumbnail_url: video.thumbnail_url,
+              view_count: video.view_count,
+              like_count: video.like_count,
+              comment_count: video.comment_count,
+              view_count_prev: prevViews,
+              growth_pct: parseFloat(growthPct.toFixed(2)),
+              collected_at: today,
+            }, { onConflict: "user_id,video_id,collected_at" });
+          }
+          console.log(`Stored ${metrics._videos.length} YouTube videos for user ${plat.user_id}`);
+        }
+
+        // ── Store individual Spotify tracks ──
+        if (plat.platform === "spotify" && metrics._tracks?.length > 0) {
+          for (const track of metrics._tracks) {
+            // Get yesterday's popularity for growth calculation
+            const { data: prevTrack } = await supabase
+              .from("spotify_tracks")
+              .select("popularity")
+              .eq("user_id", plat.user_id)
+              .eq("track_id", track.track_id)
+              .lt("collected_at", today)
+              .order("collected_at", { ascending: false })
+              .limit(1)
+              .single();
+
+            const prevPop = prevTrack?.popularity || 0;
+            const growthPct = prevPop > 0 ? ((track.popularity - prevPop) / prevPop * 100) : 0;
+
+            await supabase.from("spotify_tracks").upsert({
+              user_id: plat.user_id,
+              track_id: track.track_id,
+              track_name: track.track_name,
+              album_name: track.album_name,
+              album_image_url: track.album_image_url,
+              popularity: track.popularity,
+              popularity_prev: prevPop,
+              growth_pct: parseFloat(growthPct.toFixed(2)),
+              duration_ms: track.duration_ms,
+              collected_at: today,
+            }, { onConflict: "user_id,track_id,collected_at" });
+          }
+          console.log(`Stored ${metrics._tracks.length} Spotify tracks for user ${plat.user_id}`);
+        }
+
         results.push({
           platform: plat.platform,
           success: !result.error,
           followers: metrics.followers,
+          videos: metrics._videos?.length || 0,
+          tracks: metrics._tracks?.length || 0,
           error: result.error?.message,
         });
       } else {
