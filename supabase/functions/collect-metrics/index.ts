@@ -22,22 +22,48 @@ async function collectYouTube(platformUrl: string) {
 
   if (handleMatch) {
     const handle = handleMatch[1];
+    console.log("YouTube: Trying to resolve handle:", handle, "from URL:", platformUrl);
+
     // Try forHandle first
     let searchRes = await fetch(
       `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&forHandle=${handle}&key=${apiKey}`
     );
     let searchData = await searchRes.json();
-    console.log("YouTube forHandle response:", JSON.stringify(searchData).substring(0, 500));
+    console.log("YouTube forHandle response status:", searchRes.status, "items:", searchData.items?.length || 0);
+    if (searchData.error) {
+      console.error("YouTube API error:", JSON.stringify(searchData.error));
+    }
 
-    // If forHandle returns no items, try search endpoint as fallback
-    if (!searchData.items?.length) {
-      console.log("forHandle returned no items, trying search endpoint for:", handle);
-      searchRes = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(handle)}&key=${apiKey}`
-      );
-      searchData = await searchRes.json();
-      if (searchData.items?.length > 0) {
-        channelId = searchData.items[0].snippet.channelId || searchData.items[0].id.channelId;
+    // If forHandle returns items with statistics, return directly
+    if (searchData.items?.length > 0 && searchData.items[0].statistics) {
+      const ch = searchData.items[0];
+      const stats = ch.statistics;
+      console.log("YouTube forHandle SUCCESS:", stats.subscriberCount, "subscribers");
+      return {
+        followers: parseInt(stats.subscriberCount) || 0,
+        subscribers: parseInt(stats.subscriberCount) || 0,
+        total_views: parseInt(stats.viewCount) || 0,
+        videos_count: parseInt(stats.videoCount) || 0,
+        engagement_rate: 0,
+        raw_data: { channel: ch },
+      };
+    }
+
+    // Fallback: try search endpoint
+    console.log("forHandle returned no items, trying search endpoint for:", handle);
+    searchRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(handle)}&maxResults=1&key=${apiKey}`
+    );
+    searchData = await searchRes.json();
+    console.log("YouTube search response status:", searchRes.status, "items:", searchData.items?.length || 0);
+    if (searchData.error) {
+      console.error("YouTube search API error:", JSON.stringify(searchData.error));
+    }
+
+    if (searchData.items?.length > 0) {
+      channelId = searchData.items[0].snippet?.channelId || searchData.items[0].id?.channelId;
+      console.log("YouTube search found channelId:", channelId);
+      if (channelId) {
         // Now fetch full channel stats
         const chRes = await fetch(
           `https://www.googleapis.com/youtube/v3/channels?part=statistics,contentDetails,snippet&id=${channelId}&key=${apiKey}`
@@ -46,6 +72,7 @@ async function collectYouTube(platformUrl: string) {
         if (chData.items?.length > 0) {
           const ch = chData.items[0];
           const stats = ch.statistics;
+          console.log("YouTube channel stats SUCCESS:", stats.subscriberCount, "subscribers");
           return {
             followers: parseInt(stats.subscriberCount) || 0,
             subscribers: parseInt(stats.subscriberCount) || 0,
@@ -58,10 +85,16 @@ async function collectYouTube(platformUrl: string) {
       }
     }
 
-    if (searchData.items?.length > 0) {
-      const ch = searchData.items[0];
-      channelId = ch.id;
+    // Last fallback: try forUsername (some older channels)
+    console.log("Search also failed, trying forUsername for:", handle);
+    const usernameRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&forUsername=${handle}&key=${apiKey}`
+    );
+    const usernameData = await usernameRes.json();
+    if (usernameData.items?.length > 0) {
+      const ch = usernameData.items[0];
       const stats = ch.statistics;
+      console.log("YouTube forUsername SUCCESS:", stats.subscriberCount, "subscribers");
       return {
         followers: parseInt(stats.subscriberCount) || 0,
         subscribers: parseInt(stats.subscriberCount) || 0,
@@ -217,11 +250,23 @@ Deno.serve(async (req) => {
         // Check if we already have a record for today
         const { data: existing } = await supabase
           .from("metrics_daily")
-          .select("id")
+          .select("id, followers")
           .eq("user_id", plat.user_id)
           .eq("platform", plat.platform)
           .eq("metric_date", today)
           .single();
+
+        // GUARD: Don't overwrite good data with zeros (API rate limit / error)
+        if (existing && existing.followers > 0 && (metrics.followers || 0) === 0) {
+          console.log(`Skipping update for ${plat.platform}: new followers=0 but existing=${existing.followers} (likely API error)`);
+          results.push({
+            platform: plat.platform,
+            success: true,
+            followers: existing.followers,
+            error: "Skipped update: API returned 0 followers, keeping existing data",
+          });
+          continue;
+        }
 
         // Get yesterday's data for delta calculation
         const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
