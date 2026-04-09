@@ -64,9 +64,9 @@ export default function AIChat() {
 
   if (userPlan === 'free') {
     return (
-      <div className="animate-fade-in">
-        <h1 className="text-2xl font-bold text-foreground mb-4">AI Chat</h1>
-        <div className="glass-card p-12 text-center">
+      <div className="animate-fade-in sparkle-container warm-gradient-top">
+        <h1 className="text-2xl font-bold text-foreground mb-4 relative z-10">AI Chat</h1>
+        <div className="glass-card p-12 text-center relative z-10">
           <Lock className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-lg font-semibold text-foreground mb-2">Disponibil în planul Pro</h2>
           <p className="text-muted-foreground mb-4">Întreabă AI-ul orice despre performanța ta muzicală.</p>
@@ -77,7 +77,7 @@ export default function AIChat() {
   }
 
   return (
-    <div className="animate-fade-in flex flex-col h-[calc(100vh-7rem)]">
+    <div className="animate-fade-in flex flex-col h-[calc(100vh-7rem)] sparkle-container warm-gradient-top">
       <Dialog open={showUpgrade} onOpenChange={setShowUpgrade}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -91,14 +91,14 @@ export default function AIChat() {
         </DialogContent>
       </Dialog>
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 relative z-10">
         <h1 className="text-2xl font-bold text-foreground">AI Chat</h1>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Sparkles className="h-3.5 w-3.5 text-primary" /> Powered by Claude
         </div>
       </div>
 
-      <div className="flex flex-1 gap-4 min-h-0">
+      <div className="flex flex-1 gap-4 min-h-0 relative z-10">
         <div className="flex-1 flex flex-col glass-card overflow-hidden">
           <div ref={scrollRef} className="flex-1 overflow-auto p-4 space-y-4">
             {messages.length === 0 && (

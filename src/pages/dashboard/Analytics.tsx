@@ -76,14 +76,14 @@ export default function Analytics() {
 
   if (isProGated) {
     return (
-      <div className="animate-fade-in space-y-6">
-        <div className="flex items-center justify-between">
+      <div className="animate-fade-in space-y-6 sparkle-container warm-gradient-top">
+        <div className="flex items-center justify-between relative z-10">
           <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
           <Tabs value={period} onValueChange={v => setPeriod(v as Period)}>
             <TabsList><TabsTrigger value="7d">7 zile</TabsTrigger><TabsTrigger value="30d">30 zile</TabsTrigger><TabsTrigger value="90d">90 zile</TabsTrigger></TabsList>
           </Tabs>
         </div>
-        <div className="glass-card p-12 text-center">
+        <div className="glass-card p-12 text-center relative z-10">
           <Lock className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-lg font-semibold text-foreground mb-2">Analytics pe 90 de zile — disponibil în Pro</h2>
           <p className="text-muted-foreground mb-4">Upgrade pentru a vedea tendințe pe termen lung.</p>
@@ -94,22 +94,22 @@ export default function Analytics() {
   }
 
   return (
-    <div className="animate-fade-in space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="animate-fade-in space-y-6 sparkle-container warm-gradient-top">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative z-10">
         <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
         <Tabs value={period} onValueChange={v => setPeriod(v as Period)}>
           <TabsList><TabsTrigger value="7d">7 zile</TabsTrigger><TabsTrigger value="30d">30 zile</TabsTrigger><TabsTrigger value="90d">90 zile</TabsTrigger></TabsList>
         </Tabs>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
         {[
           { label: 'Total Followers', value: totals.followers.toLocaleString(), icon: Users },
           { label: 'Engagement Mediu', value: `${totals.engagement.toFixed(2)}%`, icon: TrendingUp },
           { label: 'Total Views', value: totals.views.toLocaleString(), icon: Eye },
           { label: 'Postări', value: totals.posts.toLocaleString(), icon: BarChart3 },
         ].map(kpi => (
-          <div key={kpi.label} className="glass-card p-4">
+          <div key={kpi.label} className="glass-card p-4 backdrop-blur-lg">
             <div className="flex items-center gap-2 mb-1">
               <kpi.icon className="h-4 w-4 text-primary" />
               <span className="text-xs text-muted-foreground">{kpi.label}</span>
@@ -120,15 +120,15 @@ export default function Analytics() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
+        <div className="flex justify-center py-12 relative z-10"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>
       ) : metrics.length === 0 ? (
-        <div className="glass-card p-12 text-center">
+        <div className="glass-card p-12 text-center relative z-10">
           <BarChart3 className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-lg font-semibold text-foreground mb-2">Încă nu sunt date</h2>
           <p className="text-muted-foreground">Conectează platforme și așteaptă primul audit zilnic.</p>
         </div>
       ) : (
-        <>
+        <div className="space-y-5 relative z-10">
           <div className="glass-card p-6">
             <h3 className="text-base font-semibold text-foreground mb-4">Evoluție Followers</h3>
             <ResponsiveContainer width="100%" height={300}>
@@ -173,7 +173,7 @@ export default function Analytics() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

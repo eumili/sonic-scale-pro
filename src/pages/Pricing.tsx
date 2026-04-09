@@ -31,102 +31,47 @@ export default function Pricing() {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from('profiles')
-      .select('plan')
-      .eq('id', user.id)
-      .single()
-      .then(({ data }) => {
-        if (data?.plan) setCurrentPlan(data.plan);
-      });
+    supabase.from('profiles').select('plan').eq('id', user.id).single().then(({ data }) => {
+      if (data?.plan) setCurrentPlan(data.plan);
+    });
   }, [user]);
 
   const handleCheckout = async (plan: 'pro' | 'agency') => {
-    if (!user) {
-      navigate(`/auth/register?plan=${plan}`);
-      return;
-    }
+    if (!user) { navigate(`/auth/register?plan=${plan}`); return; }
     setLoadingPlan(plan);
     try {
       const priceId = yearly ? PRICES[plan].yearly.id : PRICES[plan].monthly.id;
-      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
-        body: { priceId },
-      });
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', { body: { priceId } });
       if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      }
+      if (data?.url) window.location.href = data.url;
     } catch (err: any) {
       toast({ title: 'Eroare', description: err.message || 'Nu s-a putut crea sesiunea de plată.', variant: 'destructive' });
-    } finally {
-      setLoadingPlan(null);
-    }
+    } finally { setLoadingPlan(null); }
   };
 
   const plans = [
     {
-      key: 'free' as const,
-      name: 'Free',
-      price: '0',
-      yearlyPrice: '0',
-      desc: 'Pentru artiști curioși',
-      features: [
-        'Artist Health Score',
-        'Audit de bază zilnic',
-        '3 recomandări pe zi',
-        '2 platforme conectate',
-        'Analytics 7 zile',
-      ],
-      cta: 'Începe gratuit',
-      highlighted: false,
+      key: 'free' as const, name: 'Free', price: '0', yearlyPrice: '0', desc: 'Pentru artiști curioși',
+      features: ['Artist Health Score', 'Audit de bază zilnic', '3 recomandări pe zi', '2 platforme conectate', 'Analytics 7 zile'],
+      cta: 'Începe gratuit', highlighted: false,
     },
     {
-      key: 'pro' as const,
-      name: 'Pro',
-      price: '19',
-      yearlyPrice: '190',
-      monthlyEquiv: '15.83',
-      desc: 'Pentru artiști serioși',
-      features: [
-        'Tot din Free',
-        'Analytics detaliat 90 zile',
-        'Benchmark vs artiști similari',
-        'AI Chat nelimitat',
-        'Alerte algoritm în timp real',
-        '5 platforme conectate',
-        'Email zilnic personalizat',
-        'Export rapoarte PDF',
-      ],
-      cta: 'Începe Pro',
-      highlighted: true,
+      key: 'pro' as const, name: 'Pro', price: '19', yearlyPrice: '190', monthlyEquiv: '15.83', desc: 'Pentru artiști serioși',
+      features: ['Tot din Free', 'Analytics detaliat 90 zile', 'Benchmark vs artiști similari', 'AI Chat nelimitat', 'Alerte algoritm în timp real', '5 platforme conectate', 'Email zilnic personalizat', 'Export rapoarte PDF'],
+      cta: 'Începe Pro', highlighted: true,
     },
     {
-      key: 'agency' as const,
-      name: 'Agency',
-      price: '49',
-      yearlyPrice: '490',
-      monthlyEquiv: '40.83',
-      desc: 'Pentru echipe și manageri',
-      features: [
-        'Tot din Pro',
-        'Multi-artist management',
-        'API access complet',
-        'Rapoarte white-label',
-        'Suport prioritar dedicat',
-        'Platforme nelimitate',
-        'Dashboard echipă',
-        'Onboarding personalizat',
-      ],
-      cta: 'Contactează-ne',
-      highlighted: false,
+      key: 'agency' as const, name: 'Agency', price: '49', yearlyPrice: '490', monthlyEquiv: '40.83', desc: 'Pentru echipe și manageri',
+      features: ['Tot din Pro', 'Multi-artist management', 'API access complet', 'Rapoarte white-label', 'Suport prioritar dedicat', 'Platforme nelimitate', 'Dashboard echipă', 'Onboarding personalizat'],
+      cta: 'Contactează-ne', highlighted: false,
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background dark">
       <Navbar />
-      <section className="py-20">
-        <div className="container mx-auto px-4">
+      <section className="py-20 sparkle-container warm-gradient-top">
+        <div className="container mx-auto px-4 relative z-10">
           <h1 className="text-3xl md:text-4xl font-bold text-center text-foreground mb-4">
             Planuri simple, rezultate reale
           </h1>
@@ -134,7 +79,6 @@ export default function Pricing() {
             Alege planul potrivit pentru cariera ta. Upgrade sau downgrade oricând, fără angajament.
           </p>
 
-          {/* Monthly/Yearly Toggle */}
           <div className="flex items-center justify-center gap-3 mb-12">
             <Label className={`text-sm ${!yearly ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>Lunar</Label>
             <Switch checked={yearly} onCheckedChange={setYearly} />
@@ -146,16 +90,10 @@ export default function Pricing() {
 
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {plans.map(plan => {
-              const displayPrice = yearly && plan.key !== 'free'
-                ? plan.monthlyEquiv
-                : plan.price;
+              const displayPrice = yearly && plan.key !== 'free' ? plan.monthlyEquiv : plan.price;
               const isLoading = loadingPlan === plan.key;
-
               return (
-                <div
-                  key={plan.name}
-                  className={`glass-card p-6 flex flex-col relative ${plan.highlighted ? 'border-primary/50 glow-primary scale-[1.02]' : ''}`}
-                >
+                <div key={plan.name} className={`glass-card p-6 flex flex-col relative backdrop-blur-lg ${plan.highlighted ? 'border-primary/50 glow-primary scale-[1.02]' : ''}`}>
                   {plan.highlighted && (
                     <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-bold px-3 py-1 rounded-full">
                       POPULAR
@@ -167,9 +105,7 @@ export default function Pricing() {
                     <span className="text-4xl font-bold text-foreground">€{displayPrice}</span>
                     <span className="text-muted-foreground">/lună</span>
                     {yearly && plan.key !== 'free' && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Facturat €{plan.yearlyPrice}/an
-                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Facturat €{plan.yearlyPrice}/an</p>
                     )}
                   </div>
                   <ul className="space-y-2.5 mb-6 flex-1">
@@ -182,8 +118,7 @@ export default function Pricing() {
                   </ul>
                   {currentPlan === plan.key ? (
                     <Button variant="outline" className="w-full border-primary/50 text-primary" disabled>
-                      <CheckCircle2 className="h-4 w-4 mr-2" />
-                      Planul tău curent
+                      <CheckCircle2 className="h-4 w-4 mr-2" /> Planul tău curent
                     </Button>
                   ) : plan.key === 'free' ? (
                     <Button variant="outline" className="w-full" asChild>

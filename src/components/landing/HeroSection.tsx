@@ -4,9 +4,9 @@ import { ArrowRight } from 'lucide-react';
 
 export default function HeroSection() {
   return (
-    <section className="relative overflow-hidden py-24 md:py-32">
+    <section className="relative overflow-hidden py-24 md:py-32 sparkle-container">
       <div className="gradient-hero absolute inset-0" />
-      <div className="container mx-auto px-4 text-center relative">
+      <div className="container mx-auto px-4 text-center relative z-10">
         <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm text-primary mb-6">
           <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
           Primul audit complet pentru artiști independenți
@@ -19,7 +19,7 @@ export default function HeroSection() {
           Primul audit complet al prezenței tale digitale. Actualizat zilnic. Cu plan de acțiune.
         </p>
         <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-          <Button asChild size="lg" className="text-base px-8 py-6 animate-pulse-glow">
+          <Button asChild size="lg" className="text-base px-8 py-6 glow-primary">
             <Link to="/auth/register">
               Obține auditul gratuit
               <ArrowRight className="ml-2 h-4 w-4" />

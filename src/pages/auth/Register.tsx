@@ -31,11 +31,11 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 dark sparkle-container warm-gradient-top">
+      <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="h-10 w-10 rounded-xl gradient-primary flex items-center justify-center">
+            <div className="h-10 w-10 rounded-xl gradient-primary flex items-center justify-center glow-primary">
               <Music2 className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold text-foreground">ArtistPulse</span>
@@ -44,23 +44,23 @@ export default function Register() {
           <p className="text-muted-foreground mt-1">Începe auditul în 2 minute</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="glass-card p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="glass-card p-6 space-y-4 backdrop-blur-lg">
           {error && <div className="text-sm text-destructive bg-destructive/10 rounded-lg p-3">{error}</div>}
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="artist@email.com" required />
+            <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="artist@email.com" required className="bg-muted/30" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Parolă</Label>
-            <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Minim 6 caractere" required minLength={6} />
+            <Input id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Minim 6 caractere" required minLength={6} className="bg-muted/30" />
           </div>
           <div className="flex items-start gap-2">
             <Checkbox id="legal" checked={legal} onCheckedChange={(c) => setLegal(c === true)} />
             <Label htmlFor="legal" className="text-sm text-muted-foreground leading-tight">
               Accept{' '}
-              <span className="text-primary cursor-pointer">termenii și condițiile</span>{' '}
+              <Link to="/terms" className="text-primary cursor-pointer hover:underline">termenii și condițiile</Link>{' '}
               și{' '}
-              <span className="text-primary cursor-pointer">politica de confidențialitate</span>.
+              <Link to="/privacy" className="text-primary cursor-pointer hover:underline">politica de confidențialitate</Link>.
             </Label>
           </div>
           <Button type="submit" className="w-full" disabled={loading}>

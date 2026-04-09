@@ -72,8 +72,8 @@ export default function Recommendations() {
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
-    <div className="animate-fade-in space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="animate-fade-in space-y-6 sparkle-container warm-gradient-top">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative z-10">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Recomandări</h1>
           <p className="text-muted-foreground text-sm mt-1">Recomandări personalizate bazate pe datele din ultimele 7 zile</p>
@@ -86,13 +86,13 @@ export default function Recommendations() {
         )}
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-3 gap-4 relative z-10">
         {(['high', 'medium', 'low'] as const).map(priority => {
           const count = displayRecs.filter(r => r.priority === priority).length;
           const config = PRIORITY_CONFIG[priority];
           const Icon = config.icon;
           return (
-            <div key={priority} className="glass-card p-4 flex items-center gap-3">
+            <div key={priority} className="glass-card p-4 flex items-center gap-3 backdrop-blur-lg">
               <div className={`p-2 rounded-lg ${config.borderColor}`}><Icon className={`h-5 w-5 ${config.color}`} /></div>
               <div><p className="text-2xl font-bold text-foreground">{count}</p><p className="text-xs text-muted-foreground">{config.label}</p></div>
             </div>
@@ -100,13 +100,13 @@ export default function Recommendations() {
         })}
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-4 relative z-10">
         {displayRecs.map((rec, idx) => {
           const priorityConfig = PRIORITY_CONFIG[rec.priority] || PRIORITY_CONFIG.low;
           const PriorityIcon = priorityConfig.icon;
           const platformColor = PLATFORM_COLORS[rec.platform] || PLATFORM_COLORS.general;
           return (
-            <div key={rec.id || idx} className="glass-card p-5 hover:border-primary/30 transition-colors">
+            <div key={rec.id || idx} className="glass-card p-5 hover:border-primary/30 transition-colors backdrop-blur-lg">
               <div className="flex items-start gap-4">
                 <div className={`p-2 rounded-lg shrink-0 ${priorityConfig.borderColor}`}><PriorityIcon className={`h-5 w-5 ${priorityConfig.color}`} /></div>
                 <div className="flex-1 min-w-0">
@@ -124,7 +124,7 @@ export default function Recommendations() {
       </div>
 
       {['pro', 'agency'].includes(userPlan) && (
-        <div className="glass-card p-6 bg-gradient-to-r from-primary/10 to-primary/5 flex flex-col sm:flex-row items-center gap-4">
+        <div className="glass-card p-6 bg-gradient-to-r from-primary/10 to-primary/5 flex flex-col sm:flex-row items-center gap-4 relative z-10">
           <Sparkles className="h-8 w-8 text-primary shrink-0" />
           <div className="flex-1 text-center sm:text-left">
             <h3 className="text-base font-semibold text-foreground">Vrei sfaturi mai detaliate?</h3>
