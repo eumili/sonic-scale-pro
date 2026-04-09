@@ -21,11 +21,15 @@ const PLATFORM_COLORS: Record<string, string> = {
 interface MetricRow {
   metric_date: string;
   platform: string;
-  followers_total: number;
+  followers: number;
   new_followers_today: number;
   engagement_rate: number;
-  reach: number;
+  total_views: number;
   posts_count: number;
+  videos_count: number;
+  subscribers: number;
+  monthly_listeners: number;
+  total_plays: number;
 }
 
 export default function Analytics() {
@@ -68,9 +72,9 @@ export default function Analytics() {
     metrics.forEach(m => {
       if (!byDate[m.metric_date]) byDate[m.metric_date] = { date: new Date(m.metric_date).getTime() as any };
       (byDate[m.metric_date] as any).date = m.metric_date;
-      byDate[m.metric_date][`${m.platform}_followers`] = m.followers_total;
+      byDate[m.metric_date][`${m.platform}_followers`] = m.followers;
       byDate[m.metric_date][`${m.platform}_engagement`] = m.engagement_rate;
-      byDate[m.metric_date][`${m.platform}_reach`] = m.reach;
+      byDate[m.metric_date][`${m.platform}_views`] = m.total_views;
     });
     return Object.values(byDate);
   }, [metrics]);
@@ -80,7 +84,7 @@ export default function Analytics() {
   }, [metrics]);
 
   const totals = useMemo(() => {
-    if (metrics.length === 0) return { followers: 0, engagement: 0, reach: 0, posts: 0 };
+    if (metrics.length === 0) return { followers: 0, engagement: 0, views: 0, posts: 0 };
     const latest: Record<string, MetricRow> = {};
     metrics.forEach(m => {
       const key = m.platform;
@@ -88,9 +92,9 @@ export default function Analytics() {
     });
     const vals = Object.values(latest);
     return {
-      followers: vals.reduce((s, v) => s + (v.followers_total || 0), 0),
+      followers: vals.reduce((s, v) => s + (v.followers || 0), 0),
       engagement: vals.length ? vals.reduce((s, v) => s + (v.engagement_rate || 0), 0) / vals.length : 0,
-      reach: vals.reduce((s, v) => s + (v.reach || 0), 0),
+      views: vals.reduce((s, v) => s + (v.total_views || 0), 0),
       posts: vals.reduce((s, v) => s + (v.posts_count || 0), 0),
     };
   }, [metrics]);
@@ -134,7 +138,7 @@ export default function Analytics() {
         {[
           { label: 'Total Followers', value: totals.followers.toLocaleString(), icon: Users, color: 'text-primary' },
           { label: 'Engagement Mediu', value: `${totals.engagement.toFixed(2)}%`, icon: TrendingUp, color: 'text-orange-400' },
-          { label: 'Reach Total', value: totals.reach.toLocaleString(), icon: Eye, color: 'text-blue-400' },
+          { label: 'Total Views', value: totals.views.toLocaleString(), icon: Eye, color: 'text-blue-400' },
           { label: 'Postari', value: totals.posts.toLocaleString(), icon: BarChart3, color: 'text-purple-400' },
         ].map(kpi => (
           <Card key={kpi.label} className="bg-card/50 border-border/50">
@@ -225,7 +229,7 @@ export default function Analytics() {
           {/* Reach Chart */}
           <Card className="bg-card/50 border-border/50">
             <CardHeader>
-              <CardTitle className="text-base">Reach per platforma</CardTitle>
+              <CardTitle className="text-base">Views per platforma</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={250}>
@@ -237,7 +241,7 @@ export default function Analytics() {
                     contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }}
                   />
                   {activePlatforms.map(p => (
-                    <Bar key={p} dataKey={`${p}_reach`} fill={PLATFORM_COLORS[p] || '#888'} name={`${p} reach`} />
+                    <Bar key={p} dataKey={`${p}_views`} fill={PLATFORM_COLORS[p] || '#888'} name={`${p} views`} />
                   ))}
                 </BarChart>
               </ResponsiveContainer>
