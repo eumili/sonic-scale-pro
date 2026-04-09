@@ -67,17 +67,17 @@ export default function Platforms() {
   }
 
   return (
-    <div className="animate-fade-in space-y-6">
-      <div>
+    <div className="animate-fade-in space-y-6 sparkle-container warm-gradient-top">
+      <div className="relative z-10">
         <h1 className="text-2xl font-bold text-foreground">Platforme conectate</h1>
         <p className="text-muted-foreground mt-1">Conectează-ți conturile pentru a primi analytics și recomandări personalizate.</p>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-4 relative z-10">
         {platforms.map(platform => {
           const conn = isConnected(platform.key);
           return (
-            <div key={platform.key} className="glass-card p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div key={platform.key} className="glass-card p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 backdrop-blur-lg">
               <div className={`h-12 w-12 rounded-xl ${platform.bgColor} flex items-center justify-center shrink-0`} style={{ color: platform.color }}>
                 {platform.icon}
               </div>

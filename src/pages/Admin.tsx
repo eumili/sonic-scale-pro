@@ -30,9 +30,9 @@ export default function Admin() {
       .then(({ data }) => { if (data) setUsers(data); setLoading(false); });
   }, [isAdmin]);
 
-  if (isAdmin === null) return <div className="min-h-screen flex items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (isAdmin === null) return <div className="min-h-screen flex items-center justify-center bg-background dark"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   if (!isAdmin) return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background dark gap-4">
       <ShieldAlert className="h-12 w-12 text-destructive" />
       <h1 className="text-xl font-bold text-foreground">Acces interzis</h1>
       <p className="text-muted-foreground">Această pagină este doar pentru administratori.</p>
@@ -47,7 +47,7 @@ export default function Admin() {
   const recentSignups = users.filter(u => { const d = new Date(u.created_at); const week = new Date(); week.setDate(week.getDate() - 7); return d >= week; });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background dark">
       <header className="border-b border-border/50 bg-card/30 px-6 py-4 flex items-center gap-3">
         <Link to="/" className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg gradient-primary flex items-center justify-center"><Music2 className="h-4 w-4 text-primary-foreground" /></div>
@@ -57,24 +57,24 @@ export default function Admin() {
         <div className="ml-auto"><Button variant="ghost" size="sm" asChild><Link to="/dashboard">Dashboard</Link></Button></div>
       </header>
 
-      <main className="p-6 max-w-7xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold text-foreground">Admin Dashboard</h1>
+      <main className="p-6 max-w-7xl mx-auto space-y-6 sparkle-container warm-gradient-top">
+        <h1 className="text-2xl font-bold text-foreground relative z-10">Admin Dashboard</h1>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 relative z-10">
           {[
             { label: 'Total Users', value: users.length, icon: Users },
             { label: 'MRR', value: `€${mrr}`, icon: DollarSign },
             { label: 'Churn Rate', value: '2.1%', icon: TrendingDown },
             { label: 'Active Subs', value: proUsers + agencyUsers, icon: CreditCard },
           ].map(kpi => (
-            <div key={kpi.label} className="glass-card p-4">
+            <div key={kpi.label} className="glass-card p-4 backdrop-blur-lg">
               <div className="flex items-center gap-2 mb-1"><kpi.icon className="h-4 w-4 text-primary" /><span className="text-xs text-muted-foreground">{kpi.label}</span></div>
               <p className="text-2xl font-bold text-foreground">{kpi.value}</p>
             </div>
           ))}
         </div>
 
-        <div className="glass-card p-6">
+        <div className="glass-card p-6 relative z-10">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-base font-semibold text-foreground">Utilizatori ({filteredUsers.length})</h3>
             <div className="relative w-64">
@@ -101,7 +101,7 @@ export default function Admin() {
           )}
         </div>
 
-        <div className="glass-card p-6">
+        <div className="glass-card p-6 relative z-10">
           <h3 className="text-base font-semibold text-foreground mb-4">Înregistrări recente (ultimele 7 zile)</h3>
           {recentSignups.length === 0 ? <p className="text-sm text-muted-foreground">Nicio înregistrare nouă.</p> : (
             <div className="space-y-2">

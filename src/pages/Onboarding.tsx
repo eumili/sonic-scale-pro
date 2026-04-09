@@ -25,9 +25,9 @@ const platforms = [
 ];
 
 const auditMessages = [
-  'Analizam profilul YouTube...', 'Verificam Spotify...', 'Scanam Instagram...',
-  'Procesam TikTok...', 'Calculam Health Score...', 'Generam recomandari...',
-  'Comparam cu artisti similari...', 'Finalizare audit...',
+  'Analizăm profilul YouTube...', 'Verificăm Spotify...', 'Scanăm Instagram...',
+  'Procesăm TikTok...', 'Calculăm Health Score...', 'Generăm recomandări...',
+  'Comparăm cu artiști similari...', 'Finalizare audit...',
 ];
 
 export default function Onboarding() {
@@ -90,36 +90,35 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12">
-      <div className="flex items-center gap-2 mb-8">
-        <div className="h-8 w-8 rounded-lg gradient-primary flex items-center justify-center">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center px-4 py-12 dark sparkle-container warm-gradient-top">
+      <div className="flex items-center gap-2 mb-8 relative z-10">
+        <div className="h-8 w-8 rounded-lg gradient-primary flex items-center justify-center glow-primary">
           <Music2 className="h-4 w-4 text-primary-foreground" />
         </div>
         <span className="text-lg font-bold text-foreground">ArtistPulse</span>
       </div>
 
-      {/* Progress bar */}
-      <div className="w-full max-w-lg mb-8">
+      <div className="w-full max-w-lg mb-8 relative z-10">
         <div className="flex gap-2">
           {[1, 2, 3, 4].map(s => (
-            <div key={s} className={`h-1.5 flex-1 rounded-full transition-colors ${s <= step ? 'bg-primary' : 'bg-muted'}`} />
+            <div key={s} className={`h-1.5 flex-1 rounded-full transition-colors ${s <= step ? 'bg-primary glow-primary' : 'bg-muted'}`} />
           ))}
         </div>
         <p className="text-sm text-muted-foreground mt-2">Pasul {step} din 4</p>
       </div>
 
-      <div className="w-full max-w-lg">
+      <div className="w-full max-w-lg relative z-10">
         {step === 1 && (
-          <div className="glass-card p-6 space-y-4 animate-fade-in">
+          <div className="glass-card p-6 space-y-4 animate-fade-in backdrop-blur-lg">
             <h2 className="text-xl font-bold text-foreground">Spune-ne despre tine</h2>
             <div className="space-y-2">
               <Label>Numele de artist</Label>
-              <Input value={artistName} onChange={e => setArtistName(e.target.value)} placeholder="Numele tau de scena" />
+              <Input value={artistName} onChange={e => setArtistName(e.target.value)} placeholder="Numele tău de scenă" className="bg-muted/30" />
             </div>
             <div className="space-y-2">
               <Label>Gen muzical</Label>
               <Select value={genre} onValueChange={setGenre}>
-                <SelectTrigger><SelectValue placeholder="Alege genul" /></SelectTrigger>
+                <SelectTrigger className="bg-muted/30"><SelectValue placeholder="Alege genul" /></SelectTrigger>
                 <SelectContent>
                   {genres.map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
                 </SelectContent>
@@ -128,32 +127,32 @@ export default function Onboarding() {
             <div className="space-y-2">
               <Label>Stadiul carierei</Label>
               <Select value={careerStage} onValueChange={setCareerStage}>
-                <SelectTrigger><SelectValue placeholder="Unde esti acum" /></SelectTrigger>
+                <SelectTrigger className="bg-muted/30"><SelectValue placeholder="Unde ești acum" /></SelectTrigger>
                 <SelectContent>
                   {stages.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             <Button onClick={handleStep1Next} className="w-full" disabled={!artistName || !genre || !careerStage}>
-              Continua
+              Continuă
             </Button>
           </div>
         )}
 
         {step === 2 && (
-          <div className="glass-card p-6 space-y-4 animate-fade-in">
-            <h2 className="text-xl font-bold text-foreground">Conecteaza-ti platformele</h2>
-            <p className="text-sm text-muted-foreground">Adauga URL-urile profilurilor tale (minim 1).</p>
+          <div className="glass-card p-6 space-y-4 animate-fade-in backdrop-blur-lg">
+            <h2 className="text-xl font-bold text-foreground">Conectează-ți platformele</h2>
+            <p className="text-sm text-muted-foreground">Adaugă URL-urile profilurilor tale (minim 1).</p>
             {platforms.map(p => (
               <div key={p.key} className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
                   <p.icon className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <Input
                   placeholder={p.placeholder}
                   value={platformUrls[p.key] || ''}
                   onChange={e => setPlatformUrls(prev => ({ ...prev, [p.key]: e.target.value }))}
-                  className="flex-1"
+                  className="flex-1 bg-muted/30"
                 />
                 {platformUrls[p.key]?.trim() && (
                   <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
@@ -165,38 +164,38 @@ export default function Onboarding() {
               className="w-full"
               disabled={!Object.values(platformUrls).some(u => u.trim())}
             >
-              Ruleaza auditul
+              Rulează auditul
             </Button>
           </div>
         )}
 
         {step === 3 && (
-          <div className="glass-card p-8 text-center animate-fade-in">
+          <div className="glass-card p-8 text-center animate-fade-in backdrop-blur-lg">
             <Loader2 className="h-12 w-12 text-primary mx-auto mb-4 animate-spin" />
-            <h2 className="text-xl font-bold text-foreground mb-2">Rulam auditul...</h2>
+            <h2 className="text-xl font-bold text-foreground mb-2">Rulăm auditul...</h2>
             <p className="text-muted-foreground animate-pulse">{auditMessages[auditMsgIdx]}</p>
           </div>
         )}
 
         {step === 4 && (
-          <div className="glass-card p-6 text-center animate-fade-in">
+          <div className="glass-card p-6 text-center animate-fade-in backdrop-blur-lg">
             <div className="h-20 w-20 rounded-full gradient-primary flex items-center justify-center mx-auto mb-4 glow-primary">
               <span className="text-2xl font-bold text-primary-foreground">72</span>
             </div>
             <h2 className="text-xl font-bold text-foreground mb-1">Artist Health Score</h2>
-            <p className="text-muted-foreground text-sm mb-6">Ai un scor bun! Dar poti creste.</p>
+            <p className="text-muted-foreground text-sm mb-6">Ai un scor bun! Dar poți crește.</p>
             <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-muted rounded-xl p-3">
+              <div className="bg-muted/30 rounded-xl p-3 border border-border/50">
                 <p className="text-2xl font-bold text-foreground">1.2K</p>
                 <p className="text-xs text-muted-foreground">Total followers</p>
               </div>
-              <div className="bg-muted rounded-xl p-3">
+              <div className="bg-muted/30 rounded-xl p-3 border border-border/50">
                 <p className="text-2xl font-bold text-foreground">3.4%</p>
                 <p className="text-xs text-muted-foreground">Engagement</p>
               </div>
-              <div className="bg-muted rounded-xl p-3">
+              <div className="bg-muted/30 rounded-xl p-3 border border-border/50">
                 <p className="text-2xl font-bold text-foreground">+12%</p>
-                <p className="text-xs text-muted-foreground">Crestere luna</p>
+                <p className="text-xs text-muted-foreground">Creștere luna</p>
               </div>
             </div>
             <Button onClick={() => navigate('/dashboard')} className="w-full">

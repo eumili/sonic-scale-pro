@@ -61,9 +61,9 @@ export default function DashboardSettings() {
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
-    <div className="animate-fade-in space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Setări</h1>
-      <Tabs defaultValue="profile" className="space-y-6">
+    <div className="animate-fade-in space-y-6 sparkle-container warm-gradient-top">
+      <h1 className="text-2xl font-bold text-foreground relative z-10">Setări</h1>
+      <Tabs defaultValue="profile" className="space-y-6 relative z-10">
         <TabsList className="grid w-full grid-cols-4 max-w-lg">
           <TabsTrigger value="profile" className="gap-1.5 text-xs sm:text-sm"><User className="h-3.5 w-3.5" /> Profil</TabsTrigger>
           <TabsTrigger value="platforms" className="gap-1.5 text-xs sm:text-sm"><Globe className="h-3.5 w-3.5" /> Platforme</TabsTrigger>
@@ -72,7 +72,7 @@ export default function DashboardSettings() {
         </TabsList>
 
         <TabsContent value="profile">
-          <div className="glass-card p-6 space-y-6">
+          <div className="glass-card p-6 space-y-6 backdrop-blur-lg">
             <div>
               <h3 className="text-base font-semibold text-foreground mb-1">Profil artist</h3>
               <p className="text-sm text-muted-foreground">Actualizează informațiile tale de profil.</p>
@@ -94,7 +94,7 @@ export default function DashboardSettings() {
         </TabsContent>
 
         <TabsContent value="platforms">
-          <div className="glass-card p-6">
+          <div className="glass-card p-6 backdrop-blur-lg">
             <h3 className="text-base font-semibold text-foreground mb-1">Platforme conectate</h3>
             <p className="text-sm text-muted-foreground mb-4">Gestionează platformele din pagina dedicată.</p>
             <Button asChild><Link to="/dashboard/platforms" className="gap-2"><Globe className="h-4 w-4" /> Mergi la Platforme <ExternalLink className="h-3.5 w-3.5" /></Link></Button>
@@ -103,7 +103,7 @@ export default function DashboardSettings() {
 
         <TabsContent value="billing">
           <div className="space-y-4">
-            <div className="glass-card p-6 space-y-4">
+            <div className="glass-card p-6 space-y-4 backdrop-blur-lg">
               <h3 className="text-base font-semibold text-foreground">Plan curent</h3>
               <div className="flex items-center gap-3">
                 <Badge className="bg-primary/20 text-primary border-primary/30 text-sm px-3 py-1">{(profile?.plan || 'free').toUpperCase()}</Badge>
@@ -119,7 +119,7 @@ export default function DashboardSettings() {
                 )}
               </div>
             </div>
-            <div className="glass-card p-6">
+            <div className="glass-card p-6 backdrop-blur-lg">
               <h3 className="text-base font-semibold text-foreground mb-4">Istoric facturi</h3>
               {profile?.plan === 'free' ? (
                 <p className="text-sm text-muted-foreground">Nicio factură — ești pe planul gratuit.</p>
@@ -152,7 +152,7 @@ export default function DashboardSettings() {
         </TabsContent>
 
         <TabsContent value="notifications">
-          <div className="glass-card p-6 space-y-6">
+          <div className="glass-card p-6 space-y-6 backdrop-blur-lg">
             <div>
               <h3 className="text-base font-semibold text-foreground mb-1">Notificări</h3>
               <p className="text-sm text-muted-foreground">Alege ce notificări vrei să primești.</p>
