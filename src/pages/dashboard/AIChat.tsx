@@ -44,8 +44,8 @@ export default function AIChat() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('subscription_tier').eq('id', user.id).single().then(({ data }) => {
-      if (data?.subscription_tier) setUserPlan(data.subscription_tier);
+    supabase.from('profiles').select('plan').eq('id', user.id).single().then(({ data }) => {
+      if (data?.plan) setUserPlan(data.plan);
     });
     supabase.from('artist_health_scores').select('*').eq('user_id', user.id)
       .order('score_date', { ascending: false }).limit(1).then(({ data }) => {

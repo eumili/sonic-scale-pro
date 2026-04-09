@@ -25,11 +25,15 @@ export default function DashboardLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userPlan, setUserPlan] = useState<string>('free');
 
   useEffect(() => {
     if (!user) return;
     supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').then(({ data }) => {
       if (data && data.length > 0) setIsAdmin(true);
+    });
+    supabase.from('profiles').select('plan').eq('id', user.id).single().then(({ data }) => {
+      if (data?.plan) setUserPlan(data.plan);
     });
   }, [user]);
 
@@ -83,13 +87,20 @@ export default function DashboardLayout() {
           )}
         </nav>
         <div className="mt-auto pt-4 border-t border-border/50">
-          <div className="px-3 py-2 rounded-xl bg-primary/5 border border-primary/20">
-            <span className="text-xs font-semibold text-primary">FREE PLAN</span>
-            <p className="text-xs text-muted-foreground mt-0.5">Upgrade pentru mai mult</p>
-            <Button size="sm" className="w-full mt-2 h-7 text-xs" asChild>
-              <Link to="/pricing">Upgrade</Link>
-            </Button>
-          </div>
+          {userPlan === 'free' ? (
+            <div className="px-3 py-2 rounded-xl bg-primary/5 border border-primary/20">
+              <span className="text-xs font-semibold text-primary">FREE PLAN</span>
+              <p className="text-xs text-muted-foreground mt-0.5">Upgrade pentru mai mult</p>
+              <Button size="sm" className="w-full mt-2 h-7 text-xs" asChild>
+                <Link to="/pricing">Upgrade</Link>
+              </Button>
+            </div>
+          ) : (
+            <div className="px-3 py-2 rounded-xl bg-primary/5 border border-primary/20">
+              <span className="text-xs font-semibold text-primary">{userPlan.toUpperCase()} PLAN</span>
+              <p className="text-xs text-muted-foreground mt-0.5">Plan activ</p>
+            </div>
+          )}
         </div>
       </aside>
 
