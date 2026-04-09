@@ -101,7 +101,13 @@
 
 @layer utilities {
   .glass-card {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl;
+    @apply bg-card/60 backdrop-blur-xl rounded-2xl;
+    border: 1px solid hsl(35 92% 55% / 0.08);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .glass-card:hover {
+    border-color: hsl(35 92% 55% / 0.18);
+    box-shadow: 0 0 20px -8px hsl(35 92% 55% / 0.12);
   }
   .glow-primary {
     box-shadow: 0 0 40px -10px hsl(35 92% 55% / 0.3);
@@ -112,32 +118,80 @@
   .gradient-hero {
     background: radial-gradient(ellipse 80% 60% at 50% -20%, hsl(35, 92%, 55%, 0.15), transparent);
   }
-  .sparkle-bg {
+
+  /* Floating sparkle particles */
+  .sparkle-container {
     position: relative;
     overflow: hidden;
   }
-  .sparkle-bg::before {
+  .sparkle-container::before,
+  .sparkle-container::after {
     content: '';
     position: absolute;
     inset: 0;
-    background-image: radial-gradient(2px 2px at 20% 30%, hsl(35, 92%, 55%, 0.3), transparent),
-                       radial-gradient(2px 2px at 40% 70%, hsl(35, 92%, 55%, 0.2), transparent),
-                       radial-gradient(1px 1px at 60% 20%, hsl(35, 92%, 55%, 0.4), transparent),
-                       radial-gradient(1px 1px at 80% 50%, hsl(35, 92%, 55%, 0.25), transparent),
-                       radial-gradient(2px 2px at 10% 80%, hsl(35, 92%, 55%, 0.15), transparent),
-                       radial-gradient(1px 1px at 70% 90%, hsl(35, 92%, 55%, 0.3), transparent),
-                       radial-gradient(1px 1px at 50% 10%, hsl(35, 92%, 55%, 0.35), transparent),
-                       radial-gradient(2px 2px at 90% 40%, hsl(35, 92%, 55%, 0.2), transparent);
     pointer-events: none;
     z-index: 0;
-    animation: sparkle-drift 8s ease-in-out infinite alternate;
   }
-  @keyframes sparkle-drift {
-    0% { opacity: 0.6; transform: translateY(0); }
-    100% { opacity: 1; transform: translateY(-10px); }
+  .sparkle-container::before {
+    background-image:
+      radial-gradient(2px 2px at 10% 15%, hsl(35, 92%, 65%, 0.6), transparent),
+      radial-gradient(2px 2px at 25% 60%, hsl(35, 92%, 55%, 0.4), transparent),
+      radial-gradient(1.5px 1.5px at 45% 8%, hsl(40, 90%, 70%, 0.7), transparent),
+      radial-gradient(1px 1px at 60% 45%, hsl(35, 92%, 55%, 0.35), transparent),
+      radial-gradient(2px 2px at 75% 25%, hsl(30, 90%, 60%, 0.5), transparent),
+      radial-gradient(1.5px 1.5px at 88% 70%, hsl(35, 92%, 65%, 0.45), transparent),
+      radial-gradient(1px 1px at 35% 85%, hsl(40, 90%, 60%, 0.4), transparent),
+      radial-gradient(2px 2px at 55% 30%, hsl(35, 92%, 55%, 0.3), transparent),
+      radial-gradient(1px 1px at 92% 12%, hsl(35, 92%, 70%, 0.55), transparent),
+      radial-gradient(1.5px 1.5px at 15% 90%, hsl(30, 85%, 55%, 0.35), transparent),
+      radial-gradient(2px 2px at 70% 80%, hsl(35, 92%, 60%, 0.4), transparent),
+      radial-gradient(1px 1px at 5% 50%, hsl(40, 90%, 65%, 0.5), transparent);
+    animation: sparkle-float-1 12s ease-in-out infinite alternate;
   }
+  .sparkle-container::after {
+    background-image:
+      radial-gradient(1.5px 1.5px at 18% 35%, hsl(35, 92%, 70%, 0.5), transparent),
+      radial-gradient(2px 2px at 42% 75%, hsl(30, 90%, 55%, 0.35), transparent),
+      radial-gradient(1px 1px at 65% 15%, hsl(40, 92%, 65%, 0.6), transparent),
+      radial-gradient(2px 2px at 82% 55%, hsl(35, 88%, 60%, 0.4), transparent),
+      radial-gradient(1.5px 1.5px at 30% 20%, hsl(35, 92%, 65%, 0.45), transparent),
+      radial-gradient(1px 1px at 50% 65%, hsl(40, 90%, 70%, 0.35), transparent),
+      radial-gradient(2px 2px at 95% 40%, hsl(35, 92%, 55%, 0.3), transparent),
+      radial-gradient(1.5px 1.5px at 8% 72%, hsl(30, 85%, 60%, 0.45), transparent),
+      radial-gradient(1px 1px at 78% 88%, hsl(35, 92%, 65%, 0.4), transparent),
+      radial-gradient(2px 2px at 48% 5%, hsl(40, 92%, 60%, 0.55), transparent);
+    animation: sparkle-float-2 15s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes sparkle-float-1 {
+    0% { opacity: 0.5; transform: translateY(0) translateX(0); }
+    33% { opacity: 0.8; transform: translateY(-8px) translateX(3px); }
+    66% { opacity: 0.6; transform: translateY(-4px) translateX(-2px); }
+    100% { opacity: 0.9; transform: translateY(-12px) translateX(5px); }
+  }
+  @keyframes sparkle-float-2 {
+    0% { opacity: 0.4; transform: translateY(0) translateX(0); }
+    50% { opacity: 0.7; transform: translateY(-6px) translateX(-4px); }
+    100% { opacity: 0.5; transform: translateY(-10px) translateX(2px); }
+  }
+
+  /* Warm top gradient overlay for main content */
+  .warm-gradient-top {
+    position: relative;
+  }
+  .warm-gradient-top::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 300px;
+    background: radial-gradient(ellipse 100% 100% at 50% -30%, hsl(35, 92%, 55%, 0.06), transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+
   .metric-bar {
-    @apply h-2 rounded-full transition-all duration-1000 ease-out;
+    @apply h-2.5 rounded-full transition-all duration-1000 ease-out;
   }
   .metric-bar-consistency { background: linear-gradient(90deg, hsl(35, 92%, 55%), hsl(45, 92%, 60%)); }
   .metric-bar-growth { background: linear-gradient(90deg, hsl(160, 84%, 39%), hsl(140, 70%, 50%)); }
