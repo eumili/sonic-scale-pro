@@ -334,9 +334,9 @@ Deno.serve(async (req) => {
       JSON.stringify({ success: true, users: uniqueUserIds.length, recommendations: totalRecs, date: today }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (err) {
+  } catch (err: unknown) {
     console.error("generate-daily-recommendations error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: (err as Error).message }), {
       status: 500,
       headers: corsHeaders,
     });
