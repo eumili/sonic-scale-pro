@@ -10,7 +10,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
-import { User, Globe, CreditCard, Bell, Loader2, ExternalLink, Upload } from 'lucide-react';
+import { User, Globe, CreditCard, Bell, Loader2, ExternalLink, Upload, FileText, Download } from 'lucide-react';
+
+interface Invoice {
+  id: string;
+  date: string;
+  amount: string;
+  status: string;
+  pdf_url: string | null;
+  hosted_url: string | null;
+}
 
 export default function DashboardSettings() {
   const { user } = useAuth();
@@ -24,6 +33,12 @@ export default function DashboardSettings() {
     platformAlerts: true,
     recommendations: false,
   });
+  const [savingNotifications, setSavingNotifications] = useState(false);
+
+  // Billing state
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invoicesLoading, setInvoicesLoading] = useState(false);
+  const [invoicesLoaded, setInvoicesLoaded] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -31,6 +46,10 @@ export default function DashboardSettings() {
       if (data) {
         setProfile(data);
         setArtistName(data.artist_name || '');
+        // Load notification preferences from DB if they exist
+        if (data.notification_preferences) {
+          setNotifications(prev => ({ ...prev, ...data.notification_preferences }));
+        }
       }
       setLoading(false);
     });
@@ -47,11 +66,39 @@ export default function DashboardSettings() {
     setSaving(false);
   };
 
-  const mockInvoices = [
-    { id: 'INV-001', date: '2024-12-01', amount: '€19.00', status: 'Platit' },
-    { id: 'INV-002', date: '2024-11-01', amount: '€19.00', status: 'Platit' },
-    { id: 'INV-003', date: '2024-10-01', amount: '€19.00', status: 'Platit' },
-  ];
+  // Save notification preferences to database
+  const saveNotifications = async () => {
+    setSavingNotifications(true);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ notification_preferences: notifications })
+      .eq('id', user!.id);
+
+    if (error) {
+      toast({ title: 'Eroare', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Preferinte salvate!' });
+    }
+    setSavingNotifications(false);
+  };
+
+  // Load real invoices from Stripe via edge function
+  const loadInvoices = async () => {
+    if (invoicesLoaded || invoicesLoading) return;
+    if (!profile || profile.plan === 'free') return;
+
+    setInvoicesLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('get-invoices');
+      if (error) throw error;
+      setInvoices(data?.invoices || []);
+    } catch (err: any) {
+      console.error('Failed to load invoices:', err);
+      toast({ title: 'Eroare la incarcarea facturilor', description: err.message, variant: 'destructive' });
+    }
+    setInvoicesLoading(false);
+    setInvoicesLoaded(true);
+  };
 
   if (loading) {
     return (
@@ -73,7 +120,7 @@ export default function DashboardSettings() {
           <TabsTrigger value="platforms" className="gap-1.5 text-xs sm:text-sm">
             <Globe className="h-3.5 w-3.5" /> Platforme
           </TabsTrigger>
-          <TabsTrigger value="billing" className="gap-1.5 text-xs sm:text-sm">
+          <TabsTrigger value="billing" className="gap-1.5 text-xs sm:text-sm" onClick={loadInvoices}>
             <CreditCard className="h-3.5 w-3.5" /> Billing
           </TabsTrigger>
           <TabsTrigger value="notifications" className="gap-1.5 text-xs sm:text-sm">
@@ -161,7 +208,7 @@ export default function DashboardSettings() {
                   {profile?.plan === 'free' && (
                     <Button asChild><Link to="/pricing">Upgrade la Pro</Link></Button>
                   )}
-              {profile?.plan !== 'free' && (
+                  {profile?.plan !== 'free' && (
                     <Button variant="outline" onClick={async () => {
                       try {
                         const { data, error } = await supabase.functions.invoke('create-portal-session');
@@ -185,25 +232,63 @@ export default function DashboardSettings() {
               <CardContent>
                 {profile?.plan === 'free' ? (
                   <p className="text-sm text-muted-foreground">Nicio factura — esti pe planul gratuit.</p>
+                ) : invoicesLoading ? (
+                  <div className="flex items-center gap-2 py-4">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">Se incarca facturile din Stripe...</span>
+                  </div>
+                ) : invoices.length === 0 && invoicesLoaded ? (
+                  <p className="text-sm text-muted-foreground">Nicio factura gasita in Stripe.</p>
+                ) : invoices.length === 0 && !invoicesLoaded ? (
+                  <div className="text-center py-4">
+                    <Button variant="outline" size="sm" onClick={loadInvoices} className="gap-2">
+                      <FileText className="h-4 w-4" /> Incarca facturile
+                    </Button>
+                  </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-border/50 text-left">
-                          <th className="pb-2 text-muted-foreground font-medium">ID</th>
+                          <th className="pb-2 text-muted-foreground font-medium">Nr. factura</th>
                           <th className="pb-2 text-muted-foreground font-medium">Data</th>
                           <th className="pb-2 text-muted-foreground font-medium">Suma</th>
                           <th className="pb-2 text-muted-foreground font-medium">Status</th>
+                          <th className="pb-2 text-muted-foreground font-medium"></th>
                         </tr>
                       </thead>
                       <tbody>
-                        {mockInvoices.map(inv => (
+                        {invoices.map(inv => (
                           <tr key={inv.id} className="border-b border-border/30">
                             <td className="py-2.5 text-foreground">{inv.id}</td>
                             <td className="py-2.5 text-muted-foreground">{inv.date}</td>
                             <td className="py-2.5 text-foreground">{inv.amount}</td>
                             <td className="py-2.5">
-                              <Badge variant="outline" className="text-primary border-primary/30 text-xs">{inv.status}</Badge>
+                              <Badge
+                                variant="outline"
+                                className={
+                                  inv.status === 'Platit'
+                                    ? 'text-primary border-primary/30 text-xs'
+                                    : inv.status === 'In asteptare'
+                                      ? 'text-yellow-400 border-yellow-400/30 text-xs'
+                                      : 'text-red-400 border-red-400/30 text-xs'
+                                }
+                              >
+                                {inv.status}
+                              </Badge>
+                            </td>
+                            <td className="py-2.5">
+                              {inv.pdf_url && (
+                                <a
+                                  href={inv.pdf_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-primary hover:text-primary/80 transition-colors"
+                                  title="Descarca PDF"
+                                >
+                                  <Download className="h-4 w-4" />
+                                </a>
+                              )}
                             </td>
                           </tr>
                         ))}
@@ -241,7 +326,10 @@ export default function DashboardSettings() {
                   />
                 </div>
               ))}
-              <Button onClick={() => toast({ title: 'Preferinte salvate!' })}>Salveaza preferinte</Button>
+              <Button onClick={saveNotifications} disabled={savingNotifications}>
+                {savingNotifications && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                Salveaza preferinte
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>
