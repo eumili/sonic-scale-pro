@@ -83,8 +83,8 @@ export default {
         "accordion-down": { from: { height: "0" }, to: { height: "var(--radix-accordion-content-height)" } },
         "accordion-up": { from: { height: "var(--radix-accordion-content-height)" }, to: { height: "0" } },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px -5px hsl(160 84% 39% / 0.4)" },
-          "50%": { boxShadow: "0 0 40px -5px hsl(160 84% 39% / 0.6)" },
+          "0%, 100%": { boxShadow: "0 0 20px -5px hsl(35 92% 55% / 0.4)" },
+          "50%": { boxShadow: "0 0 40px -5px hsl(35 92% 55% / 0.6)" },
         },
         "fade-in": {
           from: { opacity: "0", transform: "translateY(10px)" },

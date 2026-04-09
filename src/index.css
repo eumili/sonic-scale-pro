@@ -6,37 +6,37 @@
 
 @layer base {
   :root {
-    --background: 160 10% 97%;
-    --foreground: 160 10% 10%;
+    --background: 30 10% 97%;
+    --foreground: 30 10% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 160 10% 10%;
+    --card-foreground: 30 10% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 160 10% 10%;
-    --primary: 160 84% 39%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 160 10% 92%;
-    --secondary-foreground: 160 10% 10%;
-    --muted: 160 10% 94%;
-    --muted-foreground: 160 5% 45%;
-    --accent: 160 10% 92%;
-    --accent-foreground: 160 10% 10%;
+    --popover-foreground: 30 10% 10%;
+    --primary: 35 92% 55%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 30 10% 92%;
+    --secondary-foreground: 30 10% 10%;
+    --muted: 30 10% 94%;
+    --muted-foreground: 30 5% 45%;
+    --accent: 30 10% 92%;
+    --accent-foreground: 30 10% 10%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 160 10% 88%;
-    --input: 160 10% 88%;
-    --ring: 160 84% 39%;
+    --border: 30 10% 88%;
+    --input: 30 10% 88%;
+    --ring: 35 92% 55%;
     --radius: 1rem;
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 160 10% 10%;
-    --sidebar-primary: 160 84% 39%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 10% 94%;
-    --sidebar-accent-foreground: 160 10% 10%;
-    --sidebar-border: 160 10% 90%;
-    --sidebar-ring: 160 84% 39%;
-    --chart-1: 160 84% 39%;
+    --sidebar-foreground: 30 10% 10%;
+    --sidebar-primary: 35 92% 55%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 30 10% 94%;
+    --sidebar-accent-foreground: 30 10% 10%;
+    --sidebar-border: 30 10% 90%;
+    --sidebar-ring: 35 92% 55%;
+    --chart-1: 35 92% 55%;
     --chart-2: 280 65% 60%;
-    --chart-3: 35 92% 55%;
+    --chart-3: 160 84% 39%;
     --chart-4: 200 80% 55%;
     --chart-5: 340 75% 55%;
     --warning: 35 92% 55%;
@@ -46,42 +46,42 @@
   }
 
   .dark {
-    --background: 160 15% 5%;
-    --foreground: 160 5% 92%;
-    --card: 160 12% 8%;
-    --card-foreground: 160 5% 92%;
-    --popover: 160 12% 8%;
-    --popover-foreground: 160 5% 92%;
-    --primary: 160 84% 39%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 160 10% 14%;
-    --secondary-foreground: 160 5% 92%;
-    --muted: 160 10% 14%;
-    --muted-foreground: 160 5% 55%;
-    --accent: 160 10% 14%;
-    --accent-foreground: 160 5% 92%;
+    --background: 25 15% 7%;
+    --foreground: 35 15% 92%;
+    --card: 25 12% 10%;
+    --card-foreground: 35 15% 92%;
+    --popover: 25 12% 10%;
+    --popover-foreground: 35 15% 92%;
+    --primary: 35 92% 55%;
+    --primary-foreground: 0 0% 5%;
+    --secondary: 25 10% 14%;
+    --secondary-foreground: 35 15% 92%;
+    --muted: 25 10% 15%;
+    --muted-foreground: 35 10% 50%;
+    --accent: 25 10% 14%;
+    --accent-foreground: 35 15% 92%;
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 100%;
-    --border: 160 10% 16%;
-    --input: 160 10% 16%;
-    --ring: 160 84% 39%;
+    --border: 25 10% 16%;
+    --input: 25 10% 16%;
+    --ring: 35 92% 55%;
     --radius: 1rem;
-    --sidebar-background: 160 12% 6%;
-    --sidebar-foreground: 160 5% 92%;
-    --sidebar-primary: 160 84% 39%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 10% 12%;
-    --sidebar-accent-foreground: 160 5% 92%;
-    --sidebar-border: 160 10% 14%;
-    --sidebar-ring: 160 84% 39%;
-    --chart-1: 160 84% 45%;
+    --sidebar-background: 25 15% 8%;
+    --sidebar-foreground: 35 15% 92%;
+    --sidebar-primary: 35 92% 55%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 25 10% 13%;
+    --sidebar-accent-foreground: 35 15% 92%;
+    --sidebar-border: 25 10% 14%;
+    --sidebar-ring: 35 92% 55%;
+    --chart-1: 35 92% 60%;
     --chart-2: 280 65% 65%;
-    --chart-3: 35 92% 60%;
+    --chart-3: 160 84% 45%;
     --chart-4: 200 80% 60%;
     --chart-5: 340 75% 60%;
     --warning: 35 92% 55%;
     --warning-foreground: 0 0% 100%;
-    --success: 160 84% 39%;
+    --success: 160 84% 45%;
     --success-foreground: 0 0% 100%;
   }
 }
@@ -95,6 +95,7 @@
   }
   html {
     font-family: 'Inter', sans-serif;
+    color-scheme: dark;
   }
 }
 
@@ -103,12 +104,44 @@
     @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl;
   }
   .glow-primary {
-    box-shadow: 0 0 40px -10px hsl(160 84% 39% / 0.3);
+    box-shadow: 0 0 40px -10px hsl(35 92% 55% / 0.3);
   }
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(160, 84%, 39%), hsl(160, 84%, 30%));
+    background: linear-gradient(135deg, hsl(35, 92%, 55%), hsl(25, 90%, 45%));
   }
   .gradient-hero {
-    background: radial-gradient(ellipse 80% 60% at 50% -20%, hsl(160, 84%, 39%, 0.15), transparent);
+    background: radial-gradient(ellipse 80% 60% at 50% -20%, hsl(35, 92%, 55%, 0.15), transparent);
   }
+  .sparkle-bg {
+    position: relative;
+    overflow: hidden;
+  }
+  .sparkle-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(2px 2px at 20% 30%, hsl(35, 92%, 55%, 0.3), transparent),
+                       radial-gradient(2px 2px at 40% 70%, hsl(35, 92%, 55%, 0.2), transparent),
+                       radial-gradient(1px 1px at 60% 20%, hsl(35, 92%, 55%, 0.4), transparent),
+                       radial-gradient(1px 1px at 80% 50%, hsl(35, 92%, 55%, 0.25), transparent),
+                       radial-gradient(2px 2px at 10% 80%, hsl(35, 92%, 55%, 0.15), transparent),
+                       radial-gradient(1px 1px at 70% 90%, hsl(35, 92%, 55%, 0.3), transparent),
+                       radial-gradient(1px 1px at 50% 10%, hsl(35, 92%, 55%, 0.35), transparent),
+                       radial-gradient(2px 2px at 90% 40%, hsl(35, 92%, 55%, 0.2), transparent);
+    pointer-events: none;
+    z-index: 0;
+    animation: sparkle-drift 8s ease-in-out infinite alternate;
+  }
+  @keyframes sparkle-drift {
+    0% { opacity: 0.6; transform: translateY(0); }
+    100% { opacity: 1; transform: translateY(-10px); }
+  }
+  .metric-bar {
+    @apply h-2 rounded-full transition-all duration-1000 ease-out;
+  }
+  .metric-bar-consistency { background: linear-gradient(90deg, hsl(35, 92%, 55%), hsl(45, 92%, 60%)); }
+  .metric-bar-growth { background: linear-gradient(90deg, hsl(160, 84%, 39%), hsl(140, 70%, 50%)); }
+  .metric-bar-engagement { background: linear-gradient(90deg, hsl(25, 90%, 50%), hsl(15, 85%, 45%)); }
+  .metric-bar-reach { background: linear-gradient(90deg, hsl(320, 70%, 55%), hsl(340, 80%, 60%)); }
+  .metric-bar-momentum { background: linear-gradient(90deg, hsl(280, 65%, 60%), hsl(260, 60%, 55%)); }
 }
