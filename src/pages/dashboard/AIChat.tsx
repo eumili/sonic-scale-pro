@@ -10,6 +10,13 @@ import ReactMarkdown from 'react-markdown';
 
 interface Message { role: 'user' | 'assistant'; content: string; }
 
+const SUGGESTION_CHIPS = [
+  'Cum cresc engagement-ul?',
+  'Ce conținut funcționează cel mai bine?',
+  'Analizează ultima săptămână',
+  'Compară YouTube vs Spotify',
+];
+
 function ChatBubble({ message }: { message: Message }) {
   const isUser = message.role === 'user';
   return (
@@ -44,9 +51,10 @@ export default function AIChat() {
 
   useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' }); }, [messages]);
 
-  const sendMessage = async () => {
-    if (!input.trim() || isLoading) return;
-    const userMsg: Message = { role: 'user', content: input.trim() };
+  const sendMessage = async (text?: string) => {
+    const content = (text || input).trim();
+    if (!content || isLoading) return;
+    const userMsg: Message = { role: 'user', content };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages); setInput(''); setIsLoading(true);
     try {
@@ -104,8 +112,19 @@ export default function AIChat() {
             {messages.length === 0 && (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <Bot className="h-12 w-12 text-muted-foreground/50 mb-3" />
-                <p className="text-muted-foreground text-sm">Întreabă-mă orice despre cariera ta muzicală.</p>
-                <p className="text-muted-foreground/60 text-xs mt-1">De ex: "Cum îmi cresc engagement-ul pe Instagram?"</p>
+                <p className="text-muted-foreground text-sm mb-1">Întreabă-mă orice despre cariera ta muzicală.</p>
+                <p className="text-muted-foreground/60 text-xs mb-6">De ex: "Cum îmi cresc engagement-ul pe Instagram?"</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {SUGGESTION_CHIPS.map(chip => (
+                    <button
+                      key={chip}
+                      onClick={() => sendMessage(chip)}
+                      className="rounded-full border border-foreground/20 bg-muted/30 px-4 py-2 text-xs text-foreground hover:bg-muted/60 hover:border-primary/40 transition-all"
+                    >
+                      {chip}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
             {messages.map((msg, i) => <ChatBubble key={i} message={msg} />)}

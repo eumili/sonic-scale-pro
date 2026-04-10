@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
-import { Music, Youtube, Instagram, Music2, Headphones, Link2, Unlink, ExternalLink, CheckCircle2, Loader2 } from 'lucide-react';
+import { Music, Youtube, Instagram, Music2, Headphones, Link2, Unlink, ExternalLink, CheckCircle2, Loader2, RefreshCw, Users, BarChart3, Clock } from 'lucide-react';
 
 interface PlatformConfig {
   key: string; name: string; icon: React.ReactNode; color: string; bgColor: string; oauth: boolean; placeholder: string;
@@ -20,6 +20,16 @@ const platforms: PlatformConfig[] = [
 ];
 
 interface ConnectedPlatform { id: string; platform: string; url: string; is_active: boolean; }
+interface MetricData { platform: string; followers: number; engagement_rate: string; metric_date: string; }
+
+function getTimeSince(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  if (hours < 1) return 'acum câteva minute';
+  if (hours < 24) return `acum ${hours}h`;
+  const days = Math.floor(hours / 24);
+  return `acum ${days}z`;
+}
 
 export default function Platforms() {
   const { user } = useAuth();
@@ -27,11 +37,25 @@ export default function Platforms() {
   const [loading, setLoading] = useState(true);
   const [urls, setUrls] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState<string | null>(null);
+  const [latestMetrics, setLatestMetrics] = useState<Record<string, MetricData>>({});
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('artist_platforms').select('id, platform, platform_url, is_active').eq('user_id', user.id)
-      .then(({ data }) => { if (data) setConnected(data.map(d => ({ ...d, url: d.platform_url }))); setLoading(false); });
+    Promise.all([
+      supabase.from('artist_platforms').select('id, platform, platform_url, is_active').eq('user_id', user.id),
+      supabase.from('metrics_daily').select('platform, followers, engagement_rate, metric_date').eq('user_id', user.id).order('metric_date', { ascending: false }),
+    ]).then(([platformsRes, metricsRes]) => {
+      if (platformsRes.data) setConnected(platformsRes.data.map(d => ({ ...d, url: d.platform_url })));
+      if (metricsRes.data) {
+        const byPlatform: Record<string, MetricData> = {};
+        metricsRes.data.forEach(m => {
+          if (!byPlatform[m.platform]) byPlatform[m.platform] = m;
+        });
+        setLatestMetrics(byPlatform);
+      }
+      setLoading(false);
+    });
   }, [user]);
 
   const isConnected = (key: string) => connected.find(c => c.platform === key && c.is_active);
@@ -62,6 +86,23 @@ export default function Platforms() {
     setSaving(null);
   };
 
+  const handleSync = async (platformKey: string) => {
+    setSyncing(platformKey);
+    try {
+      await supabase.functions.invoke('collect-metrics', { body: { platform: platformKey } });
+      toast({ title: 'Sincronizare inițiată', description: 'Datele vor fi actualizate în câteva minute.' });
+    } catch {
+      toast({ title: 'Sincronizare eșuată', variant: 'destructive' });
+    }
+    setSyncing(null);
+  };
+
+  const formatNumber = (n: number): string => {
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+    return n.toLocaleString();
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
@@ -76,46 +117,81 @@ export default function Platforms() {
       <div className="grid gap-4 relative z-10">
         {platforms.map(platform => {
           const conn = isConnected(platform.key);
+          const metric = latestMetrics[platform.key];
           return (
-            <div key={platform.key} className="glass-card p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4 backdrop-blur-lg">
-              <div className={`h-12 w-12 rounded-xl ${platform.bgColor} flex items-center justify-center shrink-0`} style={{ color: platform.color }}>
-                {platform.icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-semibold text-foreground">{platform.name}</span>
+            <div key={platform.key} className="glass-card p-5 flex flex-col gap-4 backdrop-blur-lg">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className={`h-12 w-12 rounded-xl ${platform.bgColor} flex items-center justify-center shrink-0`} style={{ color: platform.color }}>
+                  {platform.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-semibold text-foreground">{platform.name}</span>
+                    {conn ? (
+                      <Badge variant="outline" className="border-success/40 text-success text-xs bg-success/10">
+                        <CheckCircle2 className="h-3 w-3 mr-1" /> CONNECTED
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-muted-foreground text-xs">DISCONNECTED</Badge>
+                    )}
+                  </div>
                   {conn ? (
-                    <Badge variant="outline" className="border-success/40 text-success text-xs bg-success/10">
-                      <CheckCircle2 className="h-3 w-3 mr-1" /> CONNECTED
-                    </Badge>
+                    <p className="text-sm text-muted-foreground truncate">{conn.url}</p>
                   ) : (
-                    <Badge variant="outline" className="text-muted-foreground text-xs">DISCONNECTED</Badge>
+                    <Input
+                      placeholder={platform.placeholder}
+                      value={urls[platform.key] || ''}
+                      onChange={e => setUrls(prev => ({ ...prev, [platform.key]: e.target.value }))}
+                      className="mt-1 max-w-md bg-muted/30 border-border/50"
+                    />
                   )}
                 </div>
-                {conn ? (
-                  <p className="text-sm text-muted-foreground truncate">{conn.url}</p>
-                ) : (
-                  <Input
-                    placeholder={platform.placeholder}
-                    value={urls[platform.key] || ''}
-                    onChange={e => setUrls(prev => ({ ...prev, [platform.key]: e.target.value }))}
-                    className="mt-1 max-w-md bg-muted/30 border-border/50"
-                  />
-                )}
+                <div className="shrink-0 flex items-center gap-2">
+                  {conn && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSync(platform.key)}
+                      disabled={syncing === platform.key}
+                      className="gap-1.5"
+                    >
+                      <RefreshCw className={`h-3.5 w-3.5 ${syncing === platform.key ? 'animate-spin' : ''}`} />
+                      Sync Now
+                    </Button>
+                  )}
+                  {conn ? (
+                    <Button variant="outline" size="sm" onClick={() => handleDisconnect(platform.key)} disabled={saving === platform.key}>
+                      {saving === platform.key ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unlink className="h-4 w-4 mr-1" />}
+                      Deconectează
+                    </Button>
+                  ) : (
+                    <Button size="sm" onClick={() => handleConnect(platform)} disabled={saving === platform.key}>
+                      {saving === platform.key ? <Loader2 className="h-4 w-4 animate-spin" /> : platform.oauth ? <ExternalLink className="h-4 w-4 mr-1" /> : <Link2 className="h-4 w-4 mr-1" />}
+                      {platform.oauth ? 'Conectează cu OAuth' : 'Adaugă manual'}
+                    </Button>
+                  )}
+                </div>
               </div>
-              <div className="shrink-0">
-                {conn ? (
-                  <Button variant="outline" size="sm" onClick={() => handleDisconnect(platform.key)} disabled={saving === platform.key}>
-                    {saving === platform.key ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unlink className="h-4 w-4 mr-1" />}
-                    Deconectează
-                  </Button>
-                ) : (
-                  <Button size="sm" onClick={() => handleConnect(platform)} disabled={saving === platform.key}>
-                    {saving === platform.key ? <Loader2 className="h-4 w-4 animate-spin" /> : platform.oauth ? <ExternalLink className="h-4 w-4 mr-1" /> : <Link2 className="h-4 w-4 mr-1" />}
-                    {platform.oauth ? 'Conectează cu OAuth' : 'Adaugă manual'}
-                  </Button>
-                )}
-              </div>
+
+              {/* Stats pills for connected platforms */}
+              {conn && metric && (
+                <div className="flex flex-wrap gap-2 pl-0 sm:pl-16">
+                  <div className="flex items-center gap-1.5 rounded-full bg-muted/40 border border-border/50 px-3 py-1">
+                    <Users className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-xs font-medium text-foreground">{formatNumber(metric.followers || 0)}</span>
+                    <span className="text-xs text-muted-foreground">followers</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 rounded-full bg-muted/40 border border-border/50 px-3 py-1">
+                    <BarChart3 className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-xs font-medium text-foreground">{parseFloat(metric.engagement_rate || '0').toFixed(1)}%</span>
+                    <span className="text-xs text-muted-foreground">engagement</span>
+                  </div>
+                  <div className="flex items-center gap-1.5 rounded-full bg-muted/40 border border-border/50 px-3 py-1">
+                    <Clock className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">Synced {getTimeSince(metric.metric_date)}</span>
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}
