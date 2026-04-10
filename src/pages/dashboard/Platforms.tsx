@@ -98,10 +98,26 @@ export default function Platforms() {
   const handleSync = async (platformKey: string) => {
     setSyncing(platformKey);
     try {
-      await supabase.functions.invoke('collect-metrics', { body: { platform: platformKey } });
-      toast({ title: 'Sincronizare inițiată', description: 'Datele vor fi actualizate în câteva minute.' });
-    } catch {
-      toast({ title: 'Sincronizare eșuată', variant: 'destructive' });
+      const { data, error } = await supabase.functions.invoke('collect-metrics', { body: { platform: platformKey } });
+      if (error) throw error;
+      if (data && data.ok === false) throw new Error(data.error || 'Sync failed');
+
+      // Refresh metrics after successful sync
+      const { data: freshMetrics } = await supabase
+        .from('metrics_daily')
+        .select('platform, followers, engagement_rate, metric_date')
+        .eq('user_id', user!.id)
+        .eq('platform', platformKey)
+        .order('metric_date', { ascending: false })
+        .limit(1);
+
+      if (freshMetrics?.[0]) {
+        setLatestMetrics(prev => ({ ...prev, [platformKey]: freshMetrics[0] }));
+      }
+
+      toast({ title: 'Sincronizare reușită!', description: 'Datele au fost actualizate cu succes.' });
+    } catch (err: any) {
+      toast({ title: 'Sincronizare eșuată', description: err?.message || 'Încearcă din nou mai târziu.', variant: 'destructive' });
     }
     setSyncing(null);
   };
