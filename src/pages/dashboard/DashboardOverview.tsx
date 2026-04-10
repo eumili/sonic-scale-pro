@@ -268,17 +268,27 @@ export default function DashboardOverview() {
           <div className="flex flex-col md:flex-row items-center gap-8">
             <HealthGauge score={healthScore?.overall_score || 0} />
             <div className="flex-1 w-full space-y-3.5">
-              {subscores.map(s => (
-                <div key={s.key}>
-                  <div className="flex justify-between text-sm mb-1.5">
-                    <span className="text-muted-foreground">{s.label}</span>
-                    <span className="font-semibold text-foreground">{s.value}%</span>
+              {subscores.map(s => {
+                const barColor = s.value >= 70
+                  ? 'bg-success'
+                  : s.value >= 40
+                    ? 'bg-yellow-500'
+                    : 'bg-destructive';
+                return (
+                  <div key={s.key}>
+                    <div className="flex justify-between text-sm mb-1.5">
+                      <span className="text-muted-foreground">{s.label}</span>
+                      <span className="font-semibold text-foreground">{s.value}%</span>
+                    </div>
+                    <div className="h-3 bg-muted/30 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-1000 ease-out ${barColor}`}
+                        style={{ width: `${s.value}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-2.5 bg-muted/30 rounded-full overflow-hidden">
-                    <div className={`metric-bar ${s.barClass}`} style={{ width: `${s.value}%` }} />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>

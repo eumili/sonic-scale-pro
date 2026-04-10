@@ -1,6 +1,59 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, BarChart3, TrendingUp, Music } from 'lucide-react';
+
+function MockDashboard() {
+  const bars = [65, 82, 45, 90, 73, 58, 88];
+  return (
+    <div className="relative mx-auto mt-12 max-w-3xl">
+      <div className="glass-card p-4 sm:p-6 rounded-2xl border border-primary/10 overflow-hidden">
+        {/* Top bar */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="h-3 w-3 rounded-full bg-destructive/60" />
+            <div className="h-3 w-3 rounded-full bg-yellow-500/60" />
+            <div className="h-3 w-3 rounded-full bg-success/60" />
+          </div>
+          <div className="h-5 w-32 rounded bg-muted/40" />
+          <div className="flex gap-1.5">
+            <div className="h-5 w-14 rounded bg-muted/30" />
+            <div className="h-5 w-14 rounded bg-primary/20" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {[
+            { label: 'Followers', value: '24.8K', icon: TrendingUp, change: '+12%' },
+            { label: 'Engagement', value: '4.2%', icon: BarChart3, change: '+3.1%' },
+            { label: 'Health Score', value: '78', icon: Music, change: '' },
+          ].map(kpi => (
+            <div key={kpi.label} className="rounded-xl bg-muted/20 border border-border/30 p-3">
+              <div className="flex items-center gap-1.5 mb-1">
+                <kpi.icon className="h-3 w-3 text-primary" />
+                <span className="text-[10px] text-muted-foreground">{kpi.label}</span>
+              </div>
+              <span className="text-lg font-bold text-foreground">{kpi.value}</span>
+              {kpi.change && <span className="text-[10px] text-success ml-1">{kpi.change}</span>}
+            </div>
+          ))}
+        </div>
+
+        {/* Chart mockup */}
+        <div className="flex items-end gap-2 h-24">
+          {bars.map((h, i) => (
+            <div
+              key={i}
+              className="flex-1 rounded-t-md bg-gradient-to-t from-primary/60 to-primary/20 transition-all duration-1000"
+              style={{ height: `${h}%`, animationDelay: `${i * 100}ms` }}
+            />
+          ))}
+        </div>
+      </div>
+      {/* Glow behind */}
+      <div className="absolute -inset-4 -z-10 rounded-3xl bg-primary/5 blur-2xl" />
+    </div>
+  );
+}
 
 export default function HeroSection() {
   return (
@@ -29,6 +82,32 @@ export default function HeroSection() {
             <a href="#features">Vezi cum funcționează</a>
           </Button>
         </div>
+
+        {/* Social proof */}
+        <div className="mt-8 flex items-center justify-center gap-3">
+          <div className="flex -space-x-2">
+            {[
+              'bg-gradient-to-br from-red-400 to-red-600',
+              'bg-gradient-to-br from-blue-400 to-blue-600',
+              'bg-gradient-to-br from-green-400 to-green-600',
+              'bg-gradient-to-br from-purple-400 to-purple-600',
+              'bg-gradient-to-br from-primary to-primary/70',
+            ].map((bg, i) => (
+              <div
+                key={i}
+                className={`h-8 w-8 rounded-full ${bg} border-2 border-background flex items-center justify-center text-[10px] font-bold text-foreground`}
+              >
+                {String.fromCharCode(65 + i)}
+              </div>
+            ))}
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Trusted by <span className="font-semibold text-foreground">500+</span> artiști
+          </p>
+        </div>
+
+        {/* Mock dashboard */}
+        <MockDashboard />
       </div>
     </section>
   );

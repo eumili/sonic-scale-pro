@@ -7,9 +7,21 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
-import { User, Globe, CreditCard, Bell, Loader2, ExternalLink, Upload, FileText, Download } from 'lucide-react';
+import { User, Globe, CreditCard, Bell, Loader2, ExternalLink, Upload, FileText, Download, X } from 'lucide-react';
+
+const CAREER_STAGES = [
+  { value: 'emerging', label: 'Emerging' },
+  { value: 'rising', label: 'Rising' },
+  { value: 'established', label: 'Established' },
+  { value: 'star', label: 'Star' },
+];
+
+const GENRES = [
+  'Pop', 'Rock', 'Hip-Hop', 'Electronic', 'Folk', 'Jazz', 'Classical', 'R&B', 'Latin', 'Country', 'Manele', 'Reggaeton',
+];
 
 interface Invoice { id: string; date: string; amount: string; status: string; pdf_url: string | null; hosted_url: string | null; }
 
@@ -19,6 +31,8 @@ export default function DashboardSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [artistName, setArtistName] = useState('');
+  const [careerStage, setCareerStage] = useState('');
+  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
   const [notifications, setNotifications] = useState({ emailAlerts: true, weeklyDigest: true, platformAlerts: true, recommendations: false });
   const [savingNotifications, setSavingNotifications] = useState(false);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -28,14 +42,32 @@ export default function DashboardSettings() {
   useEffect(() => {
     if (!user) return;
     supabase.from('profiles').select('*').eq('id', user.id).single().then(({ data }) => {
-      if (data) { setProfile(data); setArtistName(data.artist_name || ''); if (data.notification_preferences) setNotifications(prev => ({ ...prev, ...data.notification_preferences })); }
+      if (data) {
+        setProfile(data);
+        setArtistName(data.artist_name || '');
+        setCareerStage(data.career_stage || '');
+        // Parse genre — could be comma-separated string or array
+        if (data.genre) {
+          const genres = typeof data.genre === 'string' ? data.genre.split(',').map((g: string) => g.trim()).filter(Boolean) : Array.isArray(data.genre) ? data.genre : [];
+          setSelectedGenres(genres);
+        }
+        if (data.notification_preferences) setNotifications(prev => ({ ...prev, ...data.notification_preferences }));
+      }
       setLoading(false);
     });
   }, [user]);
 
+  const toggleGenre = (genre: string) => {
+    setSelectedGenres(prev => prev.includes(genre) ? prev.filter(g => g !== genre) : [...prev, genre]);
+  };
+
   const saveProfile = async () => {
     setSaving(true);
-    const { error } = await supabase.from('profiles').update({ artist_name: artistName }).eq('id', user!.id);
+    const { error } = await supabase.from('profiles').update({
+      artist_name: artistName,
+      career_stage: careerStage,
+      genre: selectedGenres.join(', '),
+    }).eq('id', user!.id);
     toast(error ? { title: 'Eroare', description: error.message, variant: 'destructive' } : { title: 'Profil salvat!' });
     setSaving(false);
   };
@@ -84,10 +116,53 @@ export default function DashboardSettings() {
               <Button variant="outline" size="sm" className="gap-2"><Upload className="h-3.5 w-3.5" /> Schimbă avatar</Button>
             </div>
             <div className="grid gap-4 max-w-md">
-              <div className="space-y-2"><Label>Nume artist</Label><Input value={artistName} onChange={e => setArtistName(e.target.value)} className="bg-muted/30" /></div>
-              <div className="space-y-2"><Label>Email</Label><Input value={user?.email || ''} disabled className="opacity-60" /></div>
-              <div className="space-y-2"><Label>Gen muzical</Label><Input value={profile?.genre || ''} disabled className="opacity-60" /></div>
-              <div className="space-y-2"><Label>Stadiu carieră</Label><Input value={profile?.career_stage || ''} disabled className="opacity-60" /></div>
+              <div className="space-y-2">
+                <Label>Nume artist</Label>
+                <Input value={artistName} onChange={e => setArtistName(e.target.value)} className="bg-muted/30" />
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input value={user?.email || ''} disabled className="opacity-60" />
+              </div>
+              <div className="space-y-2">
+                <Label>Stadiu carieră</Label>
+                <Select value={careerStage} onValueChange={setCareerStage}>
+                  <SelectTrigger className="bg-muted/30">
+                    <SelectValue placeholder="Alege stadiul" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CAREER_STAGES.map(stage => (
+                      <SelectItem key={stage.value} value={stage.value}>{stage.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Gen muzical</Label>
+                <div className="flex flex-wrap gap-2">
+                  {GENRES.map(genre => {
+                    const isSelected = selectedGenres.includes(genre);
+                    return (
+                      <button
+                        key={genre}
+                        type="button"
+                        onClick={() => toggleGenre(genre)}
+                        className={`inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium transition-all ${
+                          isSelected
+                            ? 'bg-primary/20 text-primary border border-primary/40'
+                            : 'bg-muted/40 text-muted-foreground border border-border/50 hover:border-primary/30 hover:text-foreground'
+                        }`}
+                      >
+                        {genre}
+                        {isSelected && <X className="h-3 w-3" />}
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedGenres.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">Selectate: {selectedGenres.join(', ')}</p>
+                )}
+              </div>
             </div>
             <Button onClick={saveProfile} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Salvează</Button>
           </div>

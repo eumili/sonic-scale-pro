@@ -1,9 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { Loader2, Lightbulb, TrendingUp, AlertTriangle, ArrowRight, Sparkles } from 'lucide-react';
+import { Loader2, ArrowRight, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 
 interface Recommendation {
@@ -11,10 +10,10 @@ interface Recommendation {
   recommendation: string; reasoning: string; created_at: string;
 }
 
-const PRIORITY_CONFIG: Record<string, { color: string; borderColor: string; icon: any; label: string }> = {
-  high: { color: 'text-red-400', borderColor: 'border-red-400/20 bg-red-400/10', icon: AlertTriangle, label: 'Prioritate ridicată' },
-  medium: { color: 'text-primary', borderColor: 'border-primary/20 bg-primary/10', icon: TrendingUp, label: 'Prioritate medie' },
-  low: { color: 'text-success', borderColor: 'border-success/20 bg-success/10', icon: Lightbulb, label: 'Sugestie' },
+const PRIORITY_CONFIG: Record<string, { dotColor: string; borderColor: string; label: string }> = {
+  high: { dotColor: 'bg-red-400', borderColor: 'border-l-red-400', label: 'Urgent' },
+  medium: { dotColor: 'bg-primary', borderColor: 'border-l-primary', label: 'Mediu' },
+  low: { dotColor: 'bg-blue-400', borderColor: 'border-l-blue-400', label: 'Sugestie' },
 };
 
 const PLATFORM_COLORS: Record<string, string> = {
@@ -86,29 +85,29 @@ export default function Recommendations() {
         )}
       </div>
 
+      {/* Summary counts */}
       <div className="grid sm:grid-cols-3 gap-4 relative z-10">
         {(['high', 'medium', 'low'] as const).map(priority => {
           const count = displayRecs.filter(r => r.priority === priority).length;
           const config = PRIORITY_CONFIG[priority];
-          const Icon = config.icon;
           return (
             <div key={priority} className="glass-card p-4 flex items-center gap-3 backdrop-blur-lg">
-              <div className={`p-2 rounded-lg ${config.borderColor}`}><Icon className={`h-5 w-5 ${config.color}`} /></div>
+              <div className={`h-3 w-3 rounded-full ${config.dotColor}`} />
               <div><p className="text-2xl font-bold text-foreground">{count}</p><p className="text-xs text-muted-foreground">{config.label}</p></div>
             </div>
           );
         })}
       </div>
 
+      {/* Recommendation cards with colored left border */}
       <div className="space-y-4 relative z-10">
         {displayRecs.map((rec, idx) => {
           const priorityConfig = PRIORITY_CONFIG[rec.priority] || PRIORITY_CONFIG.low;
-          const PriorityIcon = priorityConfig.icon;
           const platformColor = PLATFORM_COLORS[rec.platform] || PLATFORM_COLORS.general;
           return (
-            <div key={rec.id || idx} className="glass-card p-5 hover:border-primary/30 transition-colors backdrop-blur-lg">
+            <div key={rec.id || idx} className={`glass-card p-5 border-l-4 ${priorityConfig.borderColor} hover:border-primary/30 transition-colors backdrop-blur-lg`}>
               <div className="flex items-start gap-4">
-                <div className={`p-2 rounded-lg shrink-0 ${priorityConfig.borderColor}`}><PriorityIcon className={`h-5 w-5 ${priorityConfig.color}`} /></div>
+                <div className={`h-2.5 w-2.5 rounded-full ${priorityConfig.dotColor} mt-1.5 shrink-0`} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
                     <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${platformColor}`}>{rec.platform === 'general' ? 'Strategie' : rec.platform.charAt(0).toUpperCase() + rec.platform.slice(1)}</span>
