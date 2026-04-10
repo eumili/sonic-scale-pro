@@ -60,7 +60,16 @@ export default function Platforms() {
 
   const isConnected = (key: string) => connected.find(c => c.platform === key && c.is_active);
 
+  const handleInstagramOAuth = () => {
+    const redirectUri = `${window.location.origin}/auth/instagram/callback`;
+    window.location.href = `https://www.facebook.com/v21.0/dialog/oauth?client_id=819536013926165&redirect_uri=${encodeURIComponent(redirectUri)}&scope=instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement&response_type=code`;
+  };
+
   const handleConnect = async (platform: PlatformConfig) => {
+    if (platform.key === 'instagram') {
+      handleInstagramOAuth();
+      return;
+    }
     const url = urls[platform.key];
     if (!url) { toast({ title: 'Introdu URL-ul profilului', variant: 'destructive' }); return; }
     setSaving(platform.key);
@@ -136,7 +145,13 @@ export default function Platforms() {
                     )}
                   </div>
                   {conn ? (
-                    <p className="text-sm text-muted-foreground truncate">{conn.url}</p>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {platform.key === 'instagram' && conn.url.includes('instagram.com/')
+                        ? `@${conn.url.split('instagram.com/')[1]}`
+                        : conn.url}
+                    </p>
+                  ) : platform.key === 'instagram' ? (
+                    <p className="text-xs text-muted-foreground mt-1">Conectează prin Facebook OAuth</p>
                   ) : (
                     <Input
                       placeholder={platform.placeholder}
@@ -166,8 +181,8 @@ export default function Platforms() {
                     </Button>
                   ) : (
                     <Button size="sm" onClick={() => handleConnect(platform)} disabled={saving === platform.key}>
-                      {saving === platform.key ? <Loader2 className="h-4 w-4 animate-spin" /> : platform.oauth ? <ExternalLink className="h-4 w-4 mr-1" /> : <Link2 className="h-4 w-4 mr-1" />}
-                      {platform.oauth ? 'Conectează cu OAuth' : 'Adaugă manual'}
+                      {saving === platform.key ? <Loader2 className="h-4 w-4 animate-spin" /> : platform.key === 'instagram' ? <Instagram className="h-4 w-4 mr-1" /> : platform.oauth ? <ExternalLink className="h-4 w-4 mr-1" /> : <Link2 className="h-4 w-4 mr-1" />}
+                      {platform.key === 'instagram' ? 'Conectează Instagram' : platform.oauth ? 'Conectează cu OAuth' : 'Adaugă manual'}
                     </Button>
                   )}
                 </div>
