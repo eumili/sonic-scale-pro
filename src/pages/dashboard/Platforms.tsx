@@ -145,7 +145,13 @@ export default function Platforms() {
                     )}
                   </div>
                   {conn ? (
-                    <p className="text-sm text-muted-foreground truncate">{conn.url}</p>
+                    <p className="text-sm text-muted-foreground truncate">
+                      {platform.key === 'instagram' && conn.url.includes('instagram.com/')
+                        ? `@${conn.url.split('instagram.com/')[1]}`
+                        : conn.url}
+                    </p>
+                  ) : platform.key === 'instagram' ? (
+                    <p className="text-xs text-muted-foreground mt-1">Conectează prin Facebook OAuth</p>
                   ) : (
                     <Input
                       placeholder={platform.placeholder}
@@ -175,8 +181,8 @@ export default function Platforms() {
                     </Button>
                   ) : (
                     <Button size="sm" onClick={() => handleConnect(platform)} disabled={saving === platform.key}>
-                      {saving === platform.key ? <Loader2 className="h-4 w-4 animate-spin" /> : platform.oauth ? <ExternalLink className="h-4 w-4 mr-1" /> : <Link2 className="h-4 w-4 mr-1" />}
-                      {platform.oauth ? 'Conectează cu OAuth' : 'Adaugă manual'}
+                      {saving === platform.key ? <Loader2 className="h-4 w-4 animate-spin" /> : platform.key === 'instagram' ? <Instagram className="h-4 w-4 mr-1" /> : platform.oauth ? <ExternalLink className="h-4 w-4 mr-1" /> : <Link2 className="h-4 w-4 mr-1" />}
+                      {platform.key === 'instagram' ? 'Conectează Instagram' : platform.oauth ? 'Conectează cu OAuth' : 'Adaugă manual'}
                     </Button>
                   )}
                 </div>
