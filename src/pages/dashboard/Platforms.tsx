@@ -60,7 +60,16 @@ export default function Platforms() {
 
   const isConnected = (key: string) => connected.find(c => c.platform === key && c.is_active);
 
+  const handleInstagramOAuth = () => {
+    const redirectUri = `${window.location.origin}/auth/instagram/callback`;
+    window.location.href = `https://www.facebook.com/v21.0/dialog/oauth?client_id=819536013926165&redirect_uri=${encodeURIComponent(redirectUri)}&scope=instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement&response_type=code`;
+  };
+
   const handleConnect = async (platform: PlatformConfig) => {
+    if (platform.key === 'instagram') {
+      handleInstagramOAuth();
+      return;
+    }
     const url = urls[platform.key];
     if (!url) { toast({ title: 'Introdu URL-ul profilului', variant: 'destructive' }); return; }
     setSaving(platform.key);
