@@ -42,6 +42,16 @@ export default function InstagramCallback() {
 
       setUsername(data.username || 'Cont conectat');
       setStatus('success');
+
+      // Auto-trigger metrics collection after successful Instagram connect
+      try {
+        await supabase.functions.invoke('collect-metrics', {
+          body: { user_id: user.id, platform: 'instagram' },
+        });
+      } catch {
+        // Non-blocking — metrics will be collected on next scheduled run
+      }
+
       setTimeout(() => navigate('/dashboard/platforms'), 2000);
     } catch {
       setErrorMsg('Eroare de rețea. Încearcă din nou.');

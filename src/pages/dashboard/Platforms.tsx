@@ -98,7 +98,9 @@ export default function Platforms() {
   const handleSync = async (platformKey: string) => {
     setSyncing(platformKey);
     try {
-      const { data, error } = await supabase.functions.invoke('collect-metrics', { body: { platform: platformKey } });
+      const { data, error } = await supabase.functions.invoke('collect-metrics', {
+        body: { user_id: user!.id, platform: platformKey },
+      });
       if (error) throw error;
       if (data && data.ok === false) throw new Error(data.error || 'Sync failed');
 
@@ -115,7 +117,7 @@ export default function Platforms() {
         setLatestMetrics(prev => ({ ...prev, [platformKey]: freshMetrics[0] }));
       }
 
-      toast({ title: 'Sincronizare reușită!', description: 'Datele au fost actualizate cu succes.' });
+      toast({ title: 'Sincronizare completă!', description: 'Datele au fost actualizate cu succes.' });
     } catch (err: any) {
       toast({ title: 'Sincronizare eșuată', description: err?.message || 'Încearcă din nou mai târziu.', variant: 'destructive' });
     }
