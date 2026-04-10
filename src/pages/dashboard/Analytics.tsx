@@ -3,21 +3,32 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Lock, Loader2, TrendingUp, TrendingDown, Users, Eye, BarChart3, Play, Music, ArrowUp, ArrowDown, Minus } from 'lucide-react';
+import { Lock, Loader2, TrendingUp, TrendingDown, Users, Eye, BarChart3, Play, Music, ArrowUp, ArrowDown, Minus, Instagram, Hash } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar } from 'recharts';
 
 type Period = '7d' | '30d' | '90d';
-type ContentTab = 'overview' | 'youtube' | 'spotify';
+type ContentTab = 'overview' | 'youtube' | 'spotify' | 'instagram' | 'tiktok';
 
 const PLATFORM_COLORS: Record<string, string> = {
   youtube: '#EF4444', spotify: '#22C55E', instagram: '#EC4899', tiktok: '#A78BFA', apple_music: '#F472B6',
 };
 
+const PLATFORM_LABELS: Record<string, string> = {
+  youtube: 'YouTube', spotify: 'Spotify', instagram: 'Instagram', tiktok: 'TikTok', apple_music: 'Apple Music',
+};
+
 interface MetricRow {
-  metric_date: string; platform: string; followers: number; new_followers_today: number;
-  engagement_rate: number; total_views: number; posts_count: number; videos_count: number;
-  subscribers: number; monthly_listeners: number; total_plays: number;
+  metric_date: string;
+  platform: string;
+  followers_count: number;
+  likes_count: number;
+  comments_count: number;
+  views_count: number;
+  posts_count: number;
+  shares_count: number;
+  engagement_rate: number;
+  streams_count: number;
 }
 
 interface YouTubeVideo {
@@ -63,6 +74,90 @@ function formatDuration(ms: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+/* ── Platform metrics table component ── */
+function PlatformMetricsTable({ metrics, platform }: { metrics: MetricRow[]; platform: string }) {
+  const filtered = metrics.filter(m => m.platform === platform).sort((a, b) => b.metric_date.localeCompare(a.metric_date));
+
+  if (filtered.length === 0) {
+    return (
+      <div className="glass-card p-12 text-center relative z-10">
+        <BarChart3 className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
+        <h2 className="text-lg font-semibold text-foreground mb-2">Încă nu sunt date {PLATFORM_LABELS[platform]}</h2>
+        <p className="text-muted-foreground">Conectează contul {PLATFORM_LABELS[platform]} și apasă Sync Now.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5 relative z-10">
+      {/* Summary cards */}
+      {(() => {
+        const latest = filtered[0];
+        const prev = filtered.length > 1 ? filtered[1] : null;
+        const followerGrowth = prev ? ((latest.followers_count - prev.followers_count) / (prev.followers_count || 1)) * 100 : 0;
+        const engGrowth = prev ? latest.engagement_rate - prev.engagement_rate : 0;
+        return (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="glass-card p-4">
+              <span className="text-xs text-muted-foreground">Followers</span>
+              <p className="text-2xl font-bold text-foreground">{formatNumber(latest.followers_count || 0)}</p>
+              <GrowthBadge value={followerGrowth} />
+            </div>
+            <div className="glass-card p-4">
+              <span className="text-xs text-muted-foreground">Engagement Rate</span>
+              <p className="text-2xl font-bold text-foreground">{(latest.engagement_rate || 0).toFixed(2)}%</p>
+              <GrowthBadge value={engGrowth} suffix="pp" />
+            </div>
+            <div className="glass-card p-4">
+              <span className="text-xs text-muted-foreground">Views</span>
+              <p className="text-2xl font-bold text-foreground">{formatNumber(latest.views_count || 0)}</p>
+            </div>
+            <div className="glass-card p-4">
+              <span className="text-xs text-muted-foreground">Likes</span>
+              <p className="text-2xl font-bold text-foreground">{formatNumber(latest.likes_count || 0)}</p>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Metrics table */}
+      <div className="glass-card p-6 overflow-x-auto">
+        <h3 className="text-base font-semibold text-foreground mb-4">Date zilnice — {PLATFORM_LABELS[platform]}</h3>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border/50 text-muted-foreground">
+              <th className="text-left py-2 px-2">Data</th>
+              <th className="text-right py-2 px-2">Followers</th>
+              <th className="text-right py-2 px-2">Views</th>
+              <th className="text-right py-2 px-2">Likes</th>
+              <th className="text-right py-2 px-2">Comments</th>
+              <th className="text-right py-2 px-2">Shares</th>
+              <th className="text-right py-2 px-2">Posts</th>
+              <th className="text-right py-2 px-2">Engagement</th>
+              <th className="text-right py-2 px-2">Streams</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(row => (
+              <tr key={row.metric_date} className="border-b border-border/30 hover:bg-white/5 transition-colors">
+                <td className="py-2 px-2 text-foreground">{row.metric_date}</td>
+                <td className="py-2 px-2 text-right text-foreground">{formatNumber(row.followers_count || 0)}</td>
+                <td className="py-2 px-2 text-right text-foreground">{formatNumber(row.views_count || 0)}</td>
+                <td className="py-2 px-2 text-right text-foreground">{formatNumber(row.likes_count || 0)}</td>
+                <td className="py-2 px-2 text-right text-foreground">{formatNumber(row.comments_count || 0)}</td>
+                <td className="py-2 px-2 text-right text-foreground">{formatNumber(row.shares_count || 0)}</td>
+                <td className="py-2 px-2 text-right text-foreground">{row.posts_count || 0}</td>
+                <td className="py-2 px-2 text-right text-foreground">{(row.engagement_rate || 0).toFixed(2)}%</td>
+                <td className="py-2 px-2 text-right text-foreground">{formatNumber(row.streams_count || 0)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 export default function Analytics() {
   const { user } = useAuth();
   const [period, setPeriod] = useState<Period>('7d');
@@ -75,7 +170,7 @@ export default function Analytics() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('profiles').select('plan').eq('id', user.id).single().then(({ data }) => {
+    supabase.from('profiles').select('plan').eq('id', user.id).maybeSingle().then(({ data }) => {
       if (data?.plan) setUserPlan(data.plan);
     });
   }, [user]);
@@ -89,26 +184,23 @@ export default function Analytics() {
     setLoading(true);
     supabase.from('metrics_daily').select('*').eq('user_id', user.id)
       .gte('metric_date', since.toISOString().split('T')[0]).order('metric_date', { ascending: true })
-      .then(({ data }) => { setMetrics(data || []); setLoading(false); });
+      .then(({ data }) => { setMetrics((data as MetricRow[]) || []); setLoading(false); });
   }, [user, period]);
 
-  // Fetch YouTube videos (latest collected_at)
+  // Fetch YouTube videos
   useEffect(() => {
     if (!user) return;
     supabase.from('youtube_videos').select('*').eq('user_id', user.id)
       .order('collected_at', { ascending: false }).limit(50)
       .then(({ data }) => {
         if (data && data.length > 0) {
-          // Only keep the latest collection date
           const latestDate = data[0].collected_at;
           setYtVideos(data.filter((v: any) => v.collected_at === latestDate));
-        } else {
-          setYtVideos([]);
-        }
+        } else setYtVideos([]);
       });
   }, [user]);
 
-  // Fetch Spotify tracks (latest collected_at)
+  // Fetch Spotify tracks
   useEffect(() => {
     if (!user) return;
     supabase.from('spotify_tracks').select('*').eq('user_id', user.id)
@@ -117,9 +209,7 @@ export default function Analytics() {
         if (data && data.length > 0) {
           const latestDate = data[0].collected_at;
           setSpTracks(data.filter((t: any) => t.collected_at === latestDate));
-        } else {
-          setSpTracks([]);
-        }
+        } else setSpTracks([]);
       });
   }, [user]);
 
@@ -129,9 +219,10 @@ export default function Analytics() {
     const byDate: Record<string, Record<string, any>> = {};
     metrics.forEach(m => {
       if (!byDate[m.metric_date]) byDate[m.metric_date] = { date: m.metric_date };
-      byDate[m.metric_date][`${m.platform}_followers`] = m.followers;
+      byDate[m.metric_date][`${m.platform}_followers`] = m.followers_count;
       byDate[m.metric_date][`${m.platform}_engagement`] = m.engagement_rate;
-      byDate[m.metric_date][`${m.platform}_views`] = m.total_views;
+      byDate[m.metric_date][`${m.platform}_views`] = m.views_count;
+      byDate[m.metric_date][`${m.platform}_likes`] = m.likes_count;
     });
     return Object.values(byDate);
   }, [metrics]);
@@ -144,19 +235,35 @@ export default function Analytics() {
     metrics.forEach(m => { if (!latest[m.platform] || m.metric_date > latest[m.platform].metric_date) latest[m.platform] = m; });
     const vals = Object.values(latest);
     return {
-      followers: vals.reduce((s, v) => s + (v.followers || 0), 0),
+      followers: vals.reduce((s, v) => s + (v.followers_count || 0), 0),
       engagement: vals.length ? vals.reduce((s, v) => s + (v.engagement_rate || 0), 0) / vals.length : 0,
-      views: vals.reduce((s, v) => s + (v.total_views || 0), 0),
+      views: vals.reduce((s, v) => s + (v.views_count || 0), 0),
       posts: vals.reduce((s, v) => s + (v.posts_count || 0), 0),
     };
   }, [metrics]);
 
-  // Sort YouTube videos by different criteria
+  /* Per-platform breakdown for Overview */
+  const platformBreakdowns = useMemo(() => {
+    const latest: Record<string, MetricRow> = {};
+    const prev: Record<string, MetricRow> = {};
+    const sorted = [...metrics].sort((a, b) => b.metric_date.localeCompare(a.metric_date));
+    sorted.forEach(m => {
+      if (!latest[m.platform]) { latest[m.platform] = m; return; }
+      if (!prev[m.platform] && m.metric_date < latest[m.platform].metric_date) prev[m.platform] = m;
+    });
+    return Object.entries(latest).map(([platform, lat]) => {
+      const p = prev[platform];
+      const followerGrowth = p ? ((lat.followers_count - p.followers_count) / (p.followers_count || 1)) * 100 : 0;
+      return { platform, ...lat, followerGrowth };
+    });
+  }, [metrics]);
+
+  // YouTube sort helpers
   const ytMostPopular = useMemo(() => [...ytVideos].sort((a, b) => b.view_count - a.view_count), [ytVideos]);
   const ytMostGrowing = useMemo(() => [...ytVideos].sort((a, b) => b.growth_pct - a.growth_pct), [ytVideos]);
   const ytMostDeclining = useMemo(() => [...ytVideos].filter(v => v.growth_pct < 0).sort((a, b) => a.growth_pct - b.growth_pct), [ytVideos]);
 
-  // Sort Spotify tracks by different criteria
+  // Spotify sort helpers
   const spMostPopular = useMemo(() => [...spTracks].sort((a, b) => b.popularity - a.popularity), [spTracks]);
   const spMostGrowing = useMemo(() => [...spTracks].sort((a, b) => b.growth_pct - a.growth_pct), [spTracks]);
   const spMostDeclining = useMemo(() => [...spTracks].filter(t => t.growth_pct < 0).sort((a, b) => a.growth_pct - b.growth_pct), [spTracks]);
@@ -184,7 +291,7 @@ export default function Analytics() {
 
   return (
     <div className="animate-fade-in space-y-6 sparkle-container warm-gradient-top">
-      {/* Header with period selector + content tabs */}
+      {/* Header */}
       <div className="flex flex-col gap-4 relative z-10">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-2xl font-bold text-foreground">Analytics</h1>
@@ -195,8 +302,10 @@ export default function Analytics() {
         <Tabs value={contentTab} onValueChange={v => setContentTab(v as ContentTab)}>
           <TabsList className="bg-card/50 border border-border/50">
             <TabsTrigger value="overview" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" />Overview</TabsTrigger>
-            <TabsTrigger value="youtube" className="gap-1.5"><Play className="h-3.5 w-3.5" />YouTube Videos</TabsTrigger>
-            <TabsTrigger value="spotify" className="gap-1.5"><Music className="h-3.5 w-3.5" />Spotify Tracks</TabsTrigger>
+            <TabsTrigger value="youtube" className="gap-1.5"><Play className="h-3.5 w-3.5" />YouTube</TabsTrigger>
+            <TabsTrigger value="spotify" className="gap-1.5"><Music className="h-3.5 w-3.5" />Spotify</TabsTrigger>
+            <TabsTrigger value="instagram" className="gap-1.5"><Instagram className="h-3.5 w-3.5" />Instagram</TabsTrigger>
+            <TabsTrigger value="tiktok" className="gap-1.5"><Hash className="h-3.5 w-3.5" />TikTok</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -207,7 +316,7 @@ export default function Analytics() {
           { label: 'Total Followers', value: formatNumber(totals.followers), icon: Users },
           { label: 'Engagement Mediu', value: `${totals.engagement.toFixed(2)}%`, icon: TrendingUp },
           { label: 'Total Views', value: formatNumber(totals.views), icon: Eye },
-          { label: 'Postari', value: totals.posts.toLocaleString(), icon: BarChart3 },
+          { label: 'Postări', value: totals.posts.toLocaleString(), icon: BarChart3 },
         ].map(kpi => (
           <div key={kpi.label} className="glass-card p-4 backdrop-blur-lg">
             <div className="flex items-center gap-2 mb-1">
@@ -228,13 +337,40 @@ export default function Analytics() {
             metrics.length === 0 ? (
               <div className="glass-card p-12 text-center relative z-10">
                 <BarChart3 className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
-                <h2 className="text-lg font-semibold text-foreground mb-2">Inca nu sunt date</h2>
-                <p className="text-muted-foreground">Conecteaza platforme si asteapta primul audit zilnic.</p>
+                <h2 className="text-lg font-semibold text-foreground mb-2">Încă nu sunt date</h2>
+                <p className="text-muted-foreground">Conectează platforme și apasă Sync Now.</p>
               </div>
             ) : (
               <div className="space-y-5 relative z-10">
+                {/* Per-platform breakdown cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {platformBreakdowns.map(pb => (
+                    <div key={pb.platform} className="glass-card p-5" style={{ borderLeft: `3px solid ${PLATFORM_COLORS[pb.platform] || '#888'}` }}>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-semibold text-foreground">{PLATFORM_LABELS[pb.platform] || pb.platform}</span>
+                        <GrowthBadge value={pb.followerGrowth} />
+                      </div>
+                      <div className="grid grid-cols-3 gap-3 text-center">
+                        <div>
+                          <p className="text-lg font-bold text-foreground">{formatNumber(pb.followers_count || 0)}</p>
+                          <p className="text-[10px] text-muted-foreground">Followers</p>
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-foreground">{(pb.engagement_rate || 0).toFixed(2)}%</p>
+                          <p className="text-[10px] text-muted-foreground">Engagement</p>
+                        </div>
+                        <div>
+                          <p className="text-lg font-bold text-foreground">{formatNumber(pb.views_count || 0)}</p>
+                          <p className="text-[10px] text-muted-foreground">Views</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Followers chart */}
                 <div className="glass-card p-6">
-                  <h3 className="text-base font-semibold text-foreground mb-4">Evolutie Followers</h3>
+                  <h3 className="text-base font-semibold text-foreground mb-4">Evoluție Followers</h3>
                   <ResponsiveContainer width="100%" height={300}>
                     <AreaChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -242,12 +378,13 @@ export default function Analytics() {
                       <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
                       <Tooltip contentStyle={tooltipStyle} />
                       {activePlatforms.map(p => (
-                        <Area key={p} type="monotone" dataKey={`${p}_followers`} stroke={PLATFORM_COLORS[p] || '#888'} fill={PLATFORM_COLORS[p] || '#888'} fillOpacity={0.1} name={`${p} followers`} />
+                        <Area key={p} type="monotone" dataKey={`${p}_followers`} stroke={PLATFORM_COLORS[p] || '#888'} fill={PLATFORM_COLORS[p] || '#888'} fillOpacity={0.1} name={`${PLATFORM_LABELS[p] || p} followers`} />
                       ))}
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
 
+                {/* Engagement chart */}
                 <div className="glass-card p-6">
                   <h3 className="text-base font-semibold text-foreground mb-4">Engagement Rate (%)</h3>
                   <ResponsiveContainer width="100%" height={250}>
@@ -257,14 +394,15 @@ export default function Analytics() {
                       <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
                       <Tooltip contentStyle={tooltipStyle} />
                       {activePlatforms.map(p => (
-                        <Line key={p} type="monotone" dataKey={`${p}_engagement`} stroke={PLATFORM_COLORS[p] || '#888'} strokeWidth={2} dot={false} name={`${p} engagement`} />
+                        <Line key={p} type="monotone" dataKey={`${p}_engagement`} stroke={PLATFORM_COLORS[p] || '#888'} strokeWidth={2} dot={false} name={`${PLATFORM_LABELS[p] || p} engagement`} />
                       ))}
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
 
+                {/* Content performance: likes + views bar chart */}
                 <div className="glass-card p-6">
-                  <h3 className="text-base font-semibold text-foreground mb-4">Views per platforma</h3>
+                  <h3 className="text-base font-semibold text-foreground mb-4">Performanță conținut (Views & Likes)</h3>
                   <ResponsiveContainer width="100%" height={250}>
                     <BarChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -272,7 +410,10 @@ export default function Analytics() {
                       <YAxis stroke="hsl(var(--muted-foreground))" tick={{ fontSize: 12 }} />
                       <Tooltip contentStyle={tooltipStyle} />
                       {activePlatforms.map(p => (
-                        <Bar key={p} dataKey={`${p}_views`} fill={PLATFORM_COLORS[p] || '#888'} name={`${p} views`} />
+                        <Bar key={`${p}_v`} dataKey={`${p}_views`} fill={PLATFORM_COLORS[p] || '#888'} name={`${PLATFORM_LABELS[p] || p} views`} />
+                      ))}
+                      {activePlatforms.map(p => (
+                        <Bar key={`${p}_l`} dataKey={`${p}_likes`} fill={PLATFORM_COLORS[p] || '#888'} fillOpacity={0.5} name={`${PLATFORM_LABELS[p] || p} likes`} />
                       ))}
                     </BarChart>
                   </ResponsiveContainer>
@@ -286,12 +427,11 @@ export default function Analytics() {
             ytVideos.length === 0 ? (
               <div className="glass-card p-12 text-center relative z-10">
                 <Play className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
-                <h2 className="text-lg font-semibold text-foreground mb-2">Inca nu sunt date YouTube</h2>
-                <p className="text-muted-foreground">Conecteaza canalul YouTube si asteapta colectarea datelor.</p>
+                <h2 className="text-lg font-semibold text-foreground mb-2">Încă nu sunt date YouTube</h2>
+                <p className="text-muted-foreground">Conectează canalul YouTube și apasă Sync Now.</p>
               </div>
             ) : (
               <div className="space-y-6 relative z-10">
-                {/* Most Popular */}
                 <div className="glass-card p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Eye className="h-5 w-5 text-red-400" />
@@ -305,9 +445,7 @@ export default function Analytics() {
                         {video.thumbnail_url ? (
                           <img src={video.thumbnail_url} alt="" className="w-24 h-14 rounded-lg object-cover flex-shrink-0" />
                         ) : (
-                          <div className="w-24 h-14 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-                            <Play className="h-5 w-5 text-muted-foreground" />
-                          </div>
+                          <div className="w-24 h-14 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0"><Play className="h-5 w-5 text-muted-foreground" /></div>
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">{video.title}</p>
@@ -323,12 +461,11 @@ export default function Analytics() {
                   </div>
                 </div>
 
-                {/* Most Growing */}
                 {ytMostGrowing.filter(v => v.growth_pct > 0).length > 0 && (
                   <div className="glass-card p-6">
                     <div className="flex items-center gap-2 mb-4">
                       <TrendingUp className="h-5 w-5 text-emerald-400" />
-                      <h3 className="text-base font-semibold text-foreground">Cele mai in crestere</h3>
+                      <h3 className="text-base font-semibold text-foreground">Cele mai în creștere</h3>
                     </div>
                     <div className="space-y-3">
                       {ytMostGrowing.filter(v => v.growth_pct > 0).slice(0, 5).map((video, i) => (
@@ -338,9 +475,7 @@ export default function Analytics() {
                           {video.thumbnail_url ? (
                             <img src={video.thumbnail_url} alt="" className="w-20 h-12 rounded-lg object-cover flex-shrink-0" />
                           ) : (
-                            <div className="w-20 h-12 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-                              <Play className="h-4 w-4 text-muted-foreground" />
-                            </div>
+                            <div className="w-20 h-12 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0"><Play className="h-4 w-4 text-muted-foreground" /></div>
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">{video.title}</p>
@@ -353,12 +488,11 @@ export default function Analytics() {
                   </div>
                 )}
 
-                {/* Most Declining */}
                 {ytMostDeclining.length > 0 && (
                   <div className="glass-card p-6">
                     <div className="flex items-center gap-2 mb-4">
                       <TrendingDown className="h-5 w-5 text-red-400" />
-                      <h3 className="text-base font-semibold text-foreground">Cele mai in scadere</h3>
+                      <h3 className="text-base font-semibold text-foreground">Cele mai în scădere</h3>
                     </div>
                     <div className="space-y-3">
                       {ytMostDeclining.slice(0, 5).map((video, i) => (
@@ -368,9 +502,7 @@ export default function Analytics() {
                           {video.thumbnail_url ? (
                             <img src={video.thumbnail_url} alt="" className="w-20 h-12 rounded-lg object-cover flex-shrink-0" />
                           ) : (
-                            <div className="w-20 h-12 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-                              <Play className="h-4 w-4 text-muted-foreground" />
-                            </div>
+                            <div className="w-20 h-12 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0"><Play className="h-4 w-4 text-muted-foreground" /></div>
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">{video.title}</p>
@@ -391,12 +523,11 @@ export default function Analytics() {
             spTracks.length === 0 ? (
               <div className="glass-card p-12 text-center relative z-10">
                 <Music className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
-                <h2 className="text-lg font-semibold text-foreground mb-2">Inca nu sunt date Spotify</h2>
-                <p className="text-muted-foreground">Conecteaza contul Spotify si asteapta colectarea datelor.</p>
+                <h2 className="text-lg font-semibold text-foreground mb-2">Încă nu sunt date Spotify</h2>
+                <p className="text-muted-foreground">Conectează contul Spotify și apasă Sync Now.</p>
               </div>
             ) : (
               <div className="space-y-6 relative z-10">
-                {/* Most Popular */}
                 <div className="glass-card p-6">
                   <div className="flex items-center gap-2 mb-4">
                     <Music className="h-5 w-5 text-green-400" />
@@ -410,9 +541,7 @@ export default function Analytics() {
                         {track.album_image_url ? (
                           <img src={track.album_image_url} alt="" className="w-12 h-12 rounded-lg object-cover flex-shrink-0" />
                         ) : (
-                          <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-                            <Music className="h-5 w-5 text-muted-foreground" />
-                          </div>
+                          <div className="w-12 h-12 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0"><Music className="h-5 w-5 text-muted-foreground" /></div>
                         )}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground truncate group-hover:text-green-400 transition-colors">{track.track_name}</p>
@@ -435,12 +564,11 @@ export default function Analytics() {
                   </div>
                 </div>
 
-                {/* Most Growing */}
                 {spMostGrowing.filter(t => t.growth_pct > 0).length > 0 && (
                   <div className="glass-card p-6">
                     <div className="flex items-center gap-2 mb-4">
                       <TrendingUp className="h-5 w-5 text-emerald-400" />
-                      <h3 className="text-base font-semibold text-foreground">Piese in crestere</h3>
+                      <h3 className="text-base font-semibold text-foreground">Piese în creștere</h3>
                     </div>
                     <div className="space-y-3">
                       {spMostGrowing.filter(t => t.growth_pct > 0).slice(0, 5).map((track, i) => (
@@ -450,9 +578,7 @@ export default function Analytics() {
                           {track.album_image_url ? (
                             <img src={track.album_image_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
                           ) : (
-                            <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-                              <Music className="h-4 w-4 text-muted-foreground" />
-                            </div>
+                            <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0"><Music className="h-4 w-4 text-muted-foreground" /></div>
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate group-hover:text-green-400 transition-colors">{track.track_name}</p>
@@ -465,12 +591,11 @@ export default function Analytics() {
                   </div>
                 )}
 
-                {/* Most Declining */}
                 {spMostDeclining.length > 0 && (
                   <div className="glass-card p-6">
                     <div className="flex items-center gap-2 mb-4">
                       <TrendingDown className="h-5 w-5 text-red-400" />
-                      <h3 className="text-base font-semibold text-foreground">Piese in scadere</h3>
+                      <h3 className="text-base font-semibold text-foreground">Piese în scădere</h3>
                     </div>
                     <div className="space-y-3">
                       {spMostDeclining.slice(0, 5).map((track, i) => (
@@ -480,9 +605,7 @@ export default function Analytics() {
                           {track.album_image_url ? (
                             <img src={track.album_image_url} alt="" className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
                           ) : (
-                            <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-                              <Music className="h-4 w-4 text-muted-foreground" />
-                            </div>
+                            <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0"><Music className="h-4 w-4 text-muted-foreground" /></div>
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate group-hover:text-red-400 transition-colors">{track.track_name}</p>
@@ -496,6 +619,16 @@ export default function Analytics() {
                 )}
               </div>
             )
+          )}
+
+          {/* ── INSTAGRAM TAB ── */}
+          {contentTab === 'instagram' && (
+            <PlatformMetricsTable metrics={metrics} platform="instagram" />
+          )}
+
+          {/* ── TIKTOK TAB ── */}
+          {contentTab === 'tiktok' && (
+            <PlatformMetricsTable metrics={metrics} platform="tiktok" />
           )}
         </>
       )}
