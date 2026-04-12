@@ -21,14 +21,20 @@ const PLATFORM_LABELS: Record<string, string> = {
 interface MetricRow {
   metric_date: string;
   platform: string;
-  followers_count: number;
-  likes_count: number;
-  comments_count: number;
-  views_count: number;
+  followers: number;
+  subscribers: number;
+  monthly_listeners: number;
+  total_plays: number;
+  total_views: number;
+  likes: number;
   posts_count: number;
-  shares_count: number;
+  videos_count: number;
   engagement_rate: number;
-  streams_count: number;
+  avg_views_per_video: number;
+  playlist_count: number;
+  new_followers_today: number;
+  new_plays_today: number;
+  days_since_last_post: number;
 }
 
 interface YouTubeVideo {
