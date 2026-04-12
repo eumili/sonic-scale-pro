@@ -12,21 +12,21 @@ interface Message { role: 'user' | 'assistant'; content: string; }
 
 const SUGGESTION_CHIPS = [
   'Cum cresc engagement-ul?',
-  'Ce conținut funcționează cel mai bine?',
+  'Ce conținut funcționează?',
   'Analizează ultima săptămână',
-  'Compară YouTube vs Spotify',
+  'YouTube vs Spotify',
 ];
 
 function ChatBubble({ message }: { message: Message }) {
   const isUser = message.role === 'user';
   return (
-    <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
-      <div className={`shrink-0 h-8 w-8 rounded-full flex items-center justify-center ${isUser ? 'bg-primary/20 border border-primary/30' : 'bg-muted border border-border/50'}`}>
-        {isUser ? <User className="h-4 w-4 text-primary" /> : <Bot className="h-4 w-4 text-muted-foreground" />}
+    <div className={`flex gap-2 sm:gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
+      <div className={`shrink-0 h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center ${isUser ? 'bg-primary/20 border border-primary/30' : 'bg-muted border border-border/50'}`}>
+        {isUser ? <User className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" /> : <Bot className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />}
       </div>
-      <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${isUser ? 'bg-primary text-primary-foreground' : 'bg-muted/50 border border-border/30 text-foreground'}`}>
+      <div className={`max-w-[80%] sm:max-w-[75%] rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm ${isUser ? 'bg-primary text-primary-foreground' : 'bg-muted/50 border border-border/30 text-foreground'}`}>
         {isUser ? message.content : (
-          <div className="prose prose-sm prose-invert max-w-none"><ReactMarkdown>{message.content}</ReactMarkdown></div>
+          <div className="prose prose-sm prose-invert max-w-none text-xs sm:text-sm"><ReactMarkdown>{message.content}</ReactMarkdown></div>
         )}
       </div>
     </div>
@@ -73,11 +73,11 @@ export default function AIChat() {
   if (userPlan === 'free') {
     return (
       <div className="animate-fade-in sparkle-container warm-gradient-top">
-        <h1 className="text-2xl font-bold text-foreground mb-4 relative z-10">AI Chat</h1>
-        <div className="glass-card p-12 text-center relative z-10">
-          <Lock className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-lg font-semibold text-foreground mb-2">Disponibil în planul Pro</h2>
-          <p className="text-muted-foreground mb-4">Întreabă AI-ul orice despre performanța ta muzicală.</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-4 relative z-10">AI Chat</h1>
+        <div className="glass-card p-8 sm:p-12 text-center relative z-10">
+          <Lock className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground mx-auto mb-3 sm:mb-4" />
+          <h2 className="text-base sm:text-lg font-semibold text-foreground mb-2">Disponibil în planul Pro</h2>
+          <p className="text-sm text-muted-foreground mb-4">Întreabă AI-ul orice despre performanța ta muzicală.</p>
           <Button asChild><Link to="/pricing">Upgrade la Pro</Link></Button>
         </div>
       </div>
@@ -85,41 +85,41 @@ export default function AIChat() {
   }
 
   return (
-    <div className="animate-fade-in flex flex-col h-[calc(100vh-7rem)] sparkle-container warm-gradient-top">
+    <div className="animate-fade-in flex flex-col h-[calc(100vh-5rem)] sm:h-[calc(100vh-7rem)] sparkle-container warm-gradient-top">
       <Dialog open={showUpgrade} onOpenChange={setShowUpgrade}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-w-[90vw]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" /> Upgrade la Pro</DialogTitle>
-            <DialogDescription>AI Chat este disponibil doar pentru planurile Pro și Agency.</DialogDescription>
+            <DialogTitle className="flex items-center gap-2 text-sm sm:text-base"><Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-primary" /> Upgrade la Pro</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">AI Chat este disponibil doar pentru planurile Pro și Agency.</DialogDescription>
           </DialogHeader>
-          <div className="flex gap-3 mt-4">
-            <Button asChild className="flex-1"><Link to="/pricing">Vezi planurile <ArrowUpRight className="h-4 w-4 ml-1" /></Link></Button>
-            <Button variant="outline" onClick={() => setShowUpgrade(false)}>Închide</Button>
+          <div className="flex gap-2 sm:gap-3 mt-3 sm:mt-4">
+            <Button asChild className="flex-1" size="sm"><Link to="/pricing">Vezi planurile <ArrowUpRight className="h-3.5 w-3.5 ml-1" /></Link></Button>
+            <Button variant="outline" size="sm" onClick={() => setShowUpgrade(false)}>Închide</Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      <div className="flex items-center justify-between mb-4 relative z-10">
-        <h1 className="text-2xl font-bold text-foreground">AI Chat</h1>
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Sparkles className="h-3.5 w-3.5 text-primary" /> Powered by Claude
+      <div className="flex items-center justify-between mb-3 sm:mb-4 relative z-10">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">AI Chat</h1>
+        <div className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs text-muted-foreground">
+          <Sparkles className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" /> Claude
         </div>
       </div>
 
       <div className="flex flex-1 gap-4 min-h-0 relative z-10">
         <div className="flex-1 flex flex-col glass-card overflow-hidden">
-          <div ref={scrollRef} className="flex-1 overflow-auto p-4 space-y-4">
+          <div ref={scrollRef} className="flex-1 overflow-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
             {messages.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full text-center">
-                <Bot className="h-12 w-12 text-muted-foreground/50 mb-3" />
-                <p className="text-muted-foreground text-sm mb-1">Întreabă-mă orice despre cariera ta muzicală.</p>
-                <p className="text-muted-foreground/60 text-xs mb-6">De ex: "Cum îmi cresc engagement-ul pe Instagram?"</p>
-                <div className="flex flex-wrap justify-center gap-2">
+              <div className="flex flex-col items-center justify-center h-full text-center px-2">
+                <Bot className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50 mb-2 sm:mb-3" />
+                <p className="text-muted-foreground text-xs sm:text-sm mb-1">Întreabă-mă orice despre cariera ta muzicală.</p>
+                <p className="text-muted-foreground/60 text-[10px] sm:text-xs mb-4 sm:mb-6">De ex: "Cum îmi cresc engagement-ul?"</p>
+                <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2">
                   {SUGGESTION_CHIPS.map(chip => (
                     <button
                       key={chip}
                       onClick={() => sendMessage(chip)}
-                      className="rounded-full border border-foreground/20 bg-muted/30 px-4 py-2 text-xs text-foreground hover:bg-muted/60 hover:border-primary/40 transition-all"
+                      className="rounded-full border border-foreground/20 bg-muted/30 px-2.5 sm:px-4 py-1.5 sm:py-2 text-[10px] sm:text-xs text-foreground hover:bg-muted/60 hover:border-primary/40 transition-all"
                     >
                       {chip}
                     </button>
@@ -129,20 +129,21 @@ export default function AIChat() {
             )}
             {messages.map((msg, i) => <ChatBubble key={i} message={msg} />)}
             {isLoading && (
-              <div className="flex gap-3">
-                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center"><Bot className="h-4 w-4 text-muted-foreground" /></div>
-                <div className="bg-muted rounded-2xl px-4 py-2.5"><Loader2 className="h-4 w-4 animate-spin text-muted-foreground" /></div>
+              <div className="flex gap-2 sm:gap-3">
+                <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-muted flex items-center justify-center"><Bot className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" /></div>
+                <div className="bg-muted rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5"><Loader2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin text-muted-foreground" /></div>
               </div>
             )}
           </div>
-          <div className="p-4 border-t border-border/50">
+          <div className="p-2.5 sm:p-4 border-t border-border/50">
             <form onSubmit={e => { e.preventDefault(); sendMessage(); }} className="flex gap-2">
-              <Input value={input} onChange={e => setInput(e.target.value)} placeholder="Scrie un mesaj..." className="bg-muted/30 border-border/50" disabled={isLoading} />
-              <Button type="submit" size="icon" disabled={isLoading || !input.trim()}><Send className="h-4 w-4" /></Button>
+              <Input value={input} onChange={e => setInput(e.target.value)} placeholder="Scrie un mesaj..." className="bg-muted/30 border-border/50 h-9 sm:h-10 text-xs sm:text-sm" disabled={isLoading} />
+              <Button type="submit" size="icon" className="h-9 w-9 sm:h-10 sm:w-10 shrink-0" disabled={isLoading || !input.trim()}><Send className="h-3.5 w-3.5 sm:h-4 sm:w-4" /></Button>
             </form>
           </div>
         </div>
 
+        {/* Context sidebar — hidden on mobile & tablet */}
         <div className="hidden xl:flex w-72 flex-col glass-card p-4 gap-4">
           <h3 className="text-sm font-semibold text-foreground">Context</h3>
           <div className="rounded-xl bg-primary/10 border border-primary/20 p-3 text-center">
