@@ -12,11 +12,11 @@ interface PlatformConfig {
 }
 
 const platforms: PlatformConfig[] = [
-  { key: 'youtube', name: 'YouTube', icon: <Youtube className="h-6 w-6" />, color: '#EF4444', bgColor: 'bg-red-500/10', oauth: true, placeholder: 'https://youtube.com/@canal' },
-  { key: 'spotify', name: 'Spotify', icon: <Music className="h-6 w-6" />, color: '#22C55E', bgColor: 'bg-green-500/10', oauth: true, placeholder: 'https://open.spotify.com/artist/...' },
-  { key: 'instagram', name: 'Instagram', icon: <Instagram className="h-6 w-6" />, color: '#EC4899', bgColor: 'bg-pink-500/10', oauth: true, placeholder: 'https://instagram.com/username' },
-  { key: 'tiktok', name: 'TikTok', icon: <Music2 className="h-6 w-6" />, color: '#A78BFA', bgColor: 'bg-purple-500/10', oauth: true, placeholder: 'https://tiktok.com/@username' },
-  { key: 'apple_music', name: 'Apple Music', icon: <Headphones className="h-6 w-6" />, color: '#F472B6', bgColor: 'bg-pink-500/10', oauth: false, placeholder: 'https://music.apple.com/artist/...' },
+  { key: 'youtube', name: 'YouTube', icon: <Youtube className="h-5 w-5 sm:h-6 sm:w-6" />, color: '#EF4444', bgColor: 'bg-red-500/10', oauth: true, placeholder: 'https://youtube.com/@canal' },
+  { key: 'spotify', name: 'Spotify', icon: <Music className="h-5 w-5 sm:h-6 sm:w-6" />, color: '#22C55E', bgColor: 'bg-green-500/10', oauth: true, placeholder: 'https://open.spotify.com/artist/...' },
+  { key: 'instagram', name: 'Instagram', icon: <Instagram className="h-5 w-5 sm:h-6 sm:w-6" />, color: '#EC4899', bgColor: 'bg-pink-500/10', oauth: true, placeholder: 'https://instagram.com/username' },
+  { key: 'tiktok', name: 'TikTok', icon: <Music2 className="h-5 w-5 sm:h-6 sm:w-6" />, color: '#A78BFA', bgColor: 'bg-purple-500/10', oauth: true, placeholder: 'https://tiktok.com/@username' },
+  { key: 'apple_music', name: 'Apple Music', icon: <Headphones className="h-5 w-5 sm:h-6 sm:w-6" />, color: '#F472B6', bgColor: 'bg-pink-500/10', oauth: false, placeholder: 'https://music.apple.com/artist/...' },
 ];
 
 interface ConnectedPlatform { id: string; platform: string; url: string; is_active: boolean; }
@@ -104,7 +104,6 @@ export default function Platforms() {
       if (error) throw error;
       if (data && data.ok === false) throw new Error(data.error || 'Sync failed');
 
-      // Refresh metrics after successful sync
       const { data: freshMetrics } = await supabase
         .from('metrics_daily')
         .select('platform, followers, engagement_rate, metric_date')
@@ -135,93 +134,94 @@ export default function Platforms() {
   }
 
   return (
-    <div className="animate-fade-in space-y-6 sparkle-container warm-gradient-top">
+    <div className="animate-fade-in space-y-4 sm:space-y-6 sparkle-container warm-gradient-top">
       <div className="relative z-10">
-        <h1 className="text-2xl font-bold text-foreground">Platforme conectate</h1>
-        <p className="text-muted-foreground mt-1">Conectează-ți conturile pentru a primi analytics și recomandări personalizate.</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Platforme conectate</h1>
+        <p className="text-sm text-muted-foreground mt-1">Conectează-ți conturile pentru analytics și recomandări personalizate.</p>
       </div>
 
-      <div className="grid gap-4 relative z-10">
+      <div className="grid gap-3 sm:gap-4 relative z-10">
         {platforms.map(platform => {
           const conn = isConnected(platform.key);
           const metric = latestMetrics[platform.key];
           return (
-            <div key={platform.key} className="glass-card p-5 flex flex-col gap-4 backdrop-blur-lg">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                <div className={`h-12 w-12 rounded-xl ${platform.bgColor} flex items-center justify-center shrink-0`} style={{ color: platform.color }}>
+            <div key={platform.key} className="glass-card p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 backdrop-blur-lg">
+              {/* Header row */}
+              <div className="flex items-start gap-3">
+                <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-xl ${platform.bgColor} flex items-center justify-center shrink-0`} style={{ color: platform.color }}>
                   {platform.icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="font-semibold text-foreground">{platform.name}</span>
+                  <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
+                    <span className="font-semibold text-sm sm:text-base text-foreground">{platform.name}</span>
                     {conn ? (
-                      <Badge variant="outline" className="border-success/40 text-success text-xs bg-success/10">
-                        <CheckCircle2 className="h-3 w-3 mr-1" /> CONNECTED
+                      <Badge variant="outline" className="border-success/40 text-success text-[10px] sm:text-xs bg-success/10">
+                        <CheckCircle2 className="h-3 w-3 mr-0.5 sm:mr-1" /> OK
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="text-muted-foreground text-xs">DISCONNECTED</Badge>
+                      <Badge variant="outline" className="text-muted-foreground text-[10px] sm:text-xs">OFF</Badge>
                     )}
                   </div>
                   {conn ? (
-                    <p className="text-sm text-muted-foreground truncate">
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate">
                       {platform.key === 'instagram' && conn.url.includes('instagram.com/')
                         ? `@${conn.url.split('instagram.com/')[1]}`
                         : conn.url}
                     </p>
                   ) : platform.key === 'instagram' ? (
-                    <p className="text-xs text-muted-foreground mt-1">Conectează prin Facebook OAuth</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Conectează prin Facebook OAuth</p>
                   ) : (
                     <Input
                       placeholder={platform.placeholder}
                       value={urls[platform.key] || ''}
                       onChange={e => setUrls(prev => ({ ...prev, [platform.key]: e.target.value }))}
-                      className="mt-1 max-w-md bg-muted/30 border-border/50"
+                      className="mt-1 w-full bg-muted/30 border-border/50 h-8 text-xs sm:text-sm"
                     />
-                  )}
-                </div>
-                <div className="shrink-0 flex items-center gap-2">
-                  {conn && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSync(platform.key)}
-                      disabled={syncing === platform.key}
-                      className="gap-1.5"
-                    >
-                      <RefreshCw className={`h-3.5 w-3.5 ${syncing === platform.key ? 'animate-spin' : ''}`} />
-                      Sync Now
-                    </Button>
-                  )}
-                  {conn ? (
-                    <Button variant="outline" size="sm" onClick={() => handleDisconnect(platform.key)} disabled={saving === platform.key}>
-                      {saving === platform.key ? <Loader2 className="h-4 w-4 animate-spin" /> : <Unlink className="h-4 w-4 mr-1" />}
-                      Deconectează
-                    </Button>
-                  ) : (
-                    <Button size="sm" onClick={() => handleConnect(platform)} disabled={saving === platform.key}>
-                      {saving === platform.key ? <Loader2 className="h-4 w-4 animate-spin" /> : platform.key === 'instagram' ? <Instagram className="h-4 w-4 mr-1" /> : platform.oauth ? <ExternalLink className="h-4 w-4 mr-1" /> : <Link2 className="h-4 w-4 mr-1" />}
-                      {platform.key === 'instagram' ? 'Conectează Instagram' : platform.oauth ? 'Conectează cu OAuth' : 'Adaugă manual'}
-                    </Button>
                   )}
                 </div>
               </div>
 
-              {/* Stats pills for connected platforms */}
+              {/* Action buttons — stacked on mobile */}
+              <div className="flex flex-wrap gap-2">
+                {conn && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleSync(platform.key)}
+                    disabled={syncing === platform.key}
+                    className="gap-1.5 h-8 text-xs flex-1 sm:flex-none"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${syncing === platform.key ? 'animate-spin' : ''}`} />
+                    Sync
+                  </Button>
+                )}
+                {conn ? (
+                  <Button variant="outline" size="sm" onClick={() => handleDisconnect(platform.key)} disabled={saving === platform.key} className="h-8 text-xs flex-1 sm:flex-none">
+                    {saving === platform.key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Unlink className="h-3.5 w-3.5 mr-1" />}
+                    Deconectează
+                  </Button>
+                ) : (
+                  <Button size="sm" onClick={() => handleConnect(platform)} disabled={saving === platform.key} className="h-8 text-xs w-full sm:w-auto">
+                    {saving === platform.key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : platform.key === 'instagram' ? <Instagram className="h-3.5 w-3.5 mr-1" /> : platform.oauth ? <ExternalLink className="h-3.5 w-3.5 mr-1" /> : <Link2 className="h-3.5 w-3.5 mr-1" />}
+                    {platform.key === 'instagram' ? 'Conectează Instagram' : platform.oauth ? 'Conectează cu OAuth' : 'Adaugă manual'}
+                  </Button>
+                )}
+              </div>
+
+              {/* Stats pills */}
               {conn && metric && (
-                <div className="flex flex-wrap gap-2 pl-0 sm:pl-16">
-                  <div className="flex items-center gap-1.5 rounded-full bg-muted/40 border border-border/50 px-3 py-1">
+                <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                  <div className="flex items-center gap-1 rounded-full bg-muted/40 border border-border/50 px-2.5 py-0.5 sm:px-3 sm:py-1">
                     <Users className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs font-medium text-foreground">{formatNumber(metric.followers || 0)}</span>
-                    <span className="text-xs text-muted-foreground">followers</span>
+                    <span className="text-[10px] sm:text-xs font-medium text-foreground">{formatNumber(metric.followers || 0)}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 rounded-full bg-muted/40 border border-border/50 px-3 py-1">
+                  <div className="flex items-center gap-1 rounded-full bg-muted/40 border border-border/50 px-2.5 py-0.5 sm:px-3 sm:py-1">
                     <BarChart3 className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs font-medium text-foreground">{parseFloat(metric.engagement_rate || '0').toFixed(1)}%</span>
-                    <span className="text-xs text-muted-foreground">engagement</span>
+                    <span className="text-[10px] sm:text-xs font-medium text-foreground">{parseFloat(metric.engagement_rate || '0').toFixed(1)}%</span>
                   </div>
-                  <div className="flex items-center gap-1.5 rounded-full bg-muted/40 border border-border/50 px-3 py-1">
+                  <div className="flex items-center gap-1 rounded-full bg-muted/40 border border-border/50 px-2.5 py-0.5 sm:px-3 sm:py-1">
                     <Clock className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">Synced {getTimeSince(metric.metric_date)}</span>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground">{getTimeSince(metric.metric_date)}</span>
                   </div>
                 </div>
               )}

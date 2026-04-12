@@ -75,7 +75,7 @@ function HealthGauge({ score }: { score: number }) {
   const offset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="relative w-52 h-52 shrink-0">
+    <div className="relative w-36 h-36 sm:w-52 sm:h-52 shrink-0">
       <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
         <defs>
           <linearGradient id="health-grad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -103,10 +103,10 @@ function HealthGauge({ score }: { score: number }) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <div className="flex items-baseline">
-          <span className="text-6xl font-bold text-foreground">{score}</span>
-          <span className="text-xl text-muted-foreground ml-1">/100</span>
+          <span className="text-4xl sm:text-6xl font-bold text-foreground">{score}</span>
+          <span className="text-base sm:text-xl text-muted-foreground ml-1">/100</span>
         </div>
-        <span className="text-[10px] text-muted-foreground mt-1 uppercase tracking-[0.2em]">Artist Health Score</span>
+        <span className="text-[8px] sm:text-[10px] text-muted-foreground mt-1 uppercase tracking-[0.2em]">Artist Health Score</span>
       </div>
     </div>
   );
@@ -178,7 +178,6 @@ export default function DashboardOverview() {
     const totalViews = latestVals.reduce((s, v) => s + (v.total_views || 0), 0);
     const avgEngagement = latestVals.length ? latestVals.reduce((s, v) => s + (parseFloat(v.engagement_rate) || 0), 0) / latestVals.length : 0;
 
-    // Calculate growth percentages from earliest to latest in period
     const earliestFollowers = Object.values(earliest).reduce((s, v) => s + (v.followers || 0), 0);
     const earliestViews = Object.values(earliest).reduce((s, v) => s + (v.total_views || 0), 0);
     const earliestEngagement = Object.values(earliest).length ? Object.values(earliest).reduce((s, v) => s + (parseFloat(v.engagement_rate) || 0), 0) / Object.values(earliest).length : 0;
@@ -187,7 +186,6 @@ export default function DashboardOverview() {
     const viewsGrowth = earliestViews > 0 ? ((totalViews - earliestViews) / earliestViews * 100) : 0;
     const engagementGrowth = earliestEngagement > 0 ? ((avgEngagement - earliestEngagement) / earliestEngagement * 100) : 0;
 
-    // Days since last post: check latest days_since_last_post or calculate from data
     const daysSinceLastPost = latestVals.reduce((min, v) => {
       const d = v.days_since_last_post || 0;
       return d > 0 && (min === 0 || d < min) ? d : min;
@@ -257,17 +255,16 @@ export default function DashboardOverview() {
   const momentum = getMomentumLabel(healthScore?.momentum_score || 0);
 
   return (
-    <div className="space-y-6 animate-fade-in sparkle-container warm-gradient-top">
-      {/* Minimal title — small so gauge starts higher */}
+    <div className="space-y-4 sm:space-y-6 animate-fade-in sparkle-container warm-gradient-top">
       <p className="text-sm font-medium text-muted-foreground relative z-10">Dashboard</p>
 
       {/* Health Score + Subscores + KPI Cards */}
-      <div className="grid lg:grid-cols-3 gap-5 relative z-10">
+      <div className="grid lg:grid-cols-3 gap-4 sm:gap-5 relative z-10">
         {/* Health Score Gauge + Subscores */}
-        <div className="lg:col-span-2 glass-card p-6">
-          <div className="flex flex-col md:flex-row items-center gap-8">
+        <div className="lg:col-span-2 glass-card p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
             <HealthGauge score={healthScore?.overall_score || 0} />
-            <div className="flex-1 w-full space-y-3.5">
+            <div className="flex-1 w-full space-y-2.5 sm:space-y-3.5">
               {subscores.map(s => {
                 const barColor = s.value >= 70
                   ? 'bg-success'
@@ -276,11 +273,11 @@ export default function DashboardOverview() {
                     : 'bg-destructive';
                 return (
                   <div key={s.key}>
-                    <div className="flex justify-between text-sm mb-1.5">
+                    <div className="flex justify-between text-xs sm:text-sm mb-1 sm:mb-1.5">
                       <span className="text-muted-foreground">{s.label}</span>
                       <span className="font-semibold text-foreground">{s.value}%</span>
                     </div>
-                    <div className="h-3 bg-muted/30 rounded-full overflow-hidden">
+                    <div className="h-2.5 sm:h-3 bg-muted/30 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-1000 ease-out ${barColor}`}
                         style={{ width: `${s.value}%` }}
@@ -293,53 +290,52 @@ export default function DashboardOverview() {
           </div>
         </div>
 
-        {/* KPI Cards Grid — glass-morphism with amber borders */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="glass-card p-4 flex flex-col items-center justify-center text-center backdrop-blur-lg">
-            <span className="text-xs text-muted-foreground mb-1">Total Reach</span>
-            <span className="text-2xl font-bold text-foreground">{formatNumber(kpis.followers)}</span>
+        {/* KPI Cards Grid */}
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          <div className="glass-card p-3 sm:p-4 flex flex-col items-center justify-center text-center backdrop-blur-lg">
+            <span className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">Total Reach</span>
+            <span className="text-xl sm:text-2xl font-bold text-foreground">{formatNumber(kpis.followers)}</span>
             {kpis.followerGrowth !== 0 && (
-              <span className={`text-xs flex items-center gap-0.5 mt-1 ${kpis.followerGrowth >= 0 ? 'text-success' : 'text-destructive'}`}>
+              <span className={`text-[10px] sm:text-xs flex items-center gap-0.5 mt-0.5 sm:mt-1 ${kpis.followerGrowth >= 0 ? 'text-success' : 'text-destructive'}`}>
                 <ArrowUp className={`h-3 w-3 ${kpis.followerGrowth < 0 ? 'rotate-180' : ''}`} />
                 {kpis.followerGrowth >= 0 ? '+' : ''}{kpis.followerGrowth}%
               </span>
             )}
           </div>
-          <div className="glass-card p-4 flex flex-col items-center justify-center text-center backdrop-blur-lg">
-            <span className="text-xs text-muted-foreground mb-1">Engagement Rate</span>
-            <span className="text-2xl font-bold text-foreground">{kpis.engagement.toFixed(1)}%</span>
+          <div className="glass-card p-3 sm:p-4 flex flex-col items-center justify-center text-center backdrop-blur-lg">
+            <span className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">Engagement Rate</span>
+            <span className="text-xl sm:text-2xl font-bold text-foreground">{kpis.engagement.toFixed(1)}%</span>
             {kpis.engagementGrowth !== 0 && (
-              <span className={`text-xs flex items-center gap-0.5 mt-1 ${kpis.engagementGrowth >= 0 ? 'text-success' : 'text-destructive'}`}>
+              <span className={`text-[10px] sm:text-xs flex items-center gap-0.5 mt-0.5 sm:mt-1 ${kpis.engagementGrowth >= 0 ? 'text-success' : 'text-destructive'}`}>
                 <ArrowUp className={`h-3 w-3 ${kpis.engagementGrowth < 0 ? 'rotate-180' : ''}`} />
                 {kpis.engagementGrowth >= 0 ? '+' : ''}{kpis.engagementGrowth}%
               </span>
             )}
           </div>
-          {/* Momentum — large prominent text + big arrow */}
-          <div className="glass-card p-4 flex flex-col items-center justify-center text-center backdrop-blur-lg">
-            <span className="text-xs text-muted-foreground mb-1">Momentum</span>
-            <span className={`text-3xl font-extrabold tracking-tight ${momentum.color}`}>{momentum.label}</span>
-            <ArrowUp className={`h-8 w-8 mt-1 ${momentum.color}`} strokeWidth={3} />
+          <div className="glass-card p-3 sm:p-4 flex flex-col items-center justify-center text-center backdrop-blur-lg">
+            <span className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">Momentum</span>
+            <span className={`text-xl sm:text-3xl font-extrabold tracking-tight ${momentum.color}`}>{momentum.label}</span>
+            <ArrowUp className={`h-5 w-5 sm:h-8 sm:w-8 mt-0.5 sm:mt-1 ${momentum.color}`} strokeWidth={3} />
           </div>
-          <div className="glass-card p-4 flex flex-col items-center justify-center text-center backdrop-blur-lg">
-            <span className="text-xs text-muted-foreground mb-1">Days Since Last Post</span>
-            <span className={`text-3xl font-bold ${kpis.daysSinceLastPost > 3 ? 'text-destructive' : kpis.daysSinceLastPost > 1 ? 'text-primary' : 'text-foreground'}`}>
+          <div className="glass-card p-3 sm:p-4 flex flex-col items-center justify-center text-center backdrop-blur-lg">
+            <span className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">Days Since Last Post</span>
+            <span className={`text-xl sm:text-3xl font-bold ${kpis.daysSinceLastPost > 3 ? 'text-destructive' : kpis.daysSinceLastPost > 1 ? 'text-primary' : 'text-foreground'}`}>
               {kpis.daysSinceLastPost > 0 ? kpis.daysSinceLastPost : '—'}
             </span>
-            {kpis.daysSinceLastPost > 3 && <AlertTriangle className="h-4 w-4 text-destructive mt-1" />}
+            {kpis.daysSinceLastPost > 3 && <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 sm:mt-1" />}
             {kpis.daysSinceLastPost > 0 && kpis.daysSinceLastPost <= 3 && (
-              <span className="text-xs font-medium text-foreground uppercase tracking-wider">Days</span>
+              <span className="text-[10px] sm:text-xs font-medium text-foreground uppercase tracking-wider">Days</span>
             )}
           </div>
         </div>
       </div>
 
       {/* Daily Focus + Benchmark + Platform Status */}
-      <div className="grid lg:grid-cols-3 gap-5 relative z-10">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 relative z-10">
         {/* Daily Focus Checklist */}
-        <div className="glass-card p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-foreground">Daily Focus Checklist</h2>
+        <div className="glass-card p-4 sm:p-5">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="text-sm sm:text-base font-semibold text-foreground">Daily Focus Checklist</h2>
             <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-4 w-4" /></Button>
           </div>
           <div className="space-y-2">
@@ -349,28 +345,22 @@ export default function DashboardOverview() {
                 <button
                   key={i}
                   onClick={() => toggleTodo(i)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all text-left ${
+                  className={`w-full flex items-center gap-2 sm:gap-3 px-2.5 sm:px-3 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm transition-all text-left ${
                     done ? 'bg-success/10 text-muted-foreground line-through' : 'bg-muted/20 hover:bg-muted/40 text-foreground'
                   }`}
                 >
-                  <div className={`h-5 w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
+                  <div className={`h-4 w-4 sm:h-5 sm:w-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
                     done ? 'bg-success border-success' : 'border-success/40'
                   }`}>
-                    {done && <Check className="h-3 w-3 text-success-foreground" />}
+                    {done && <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-success-foreground" />}
                   </div>
-                  <span className="flex-1">{t.text}</span>
+                  <span className="flex-1 line-clamp-2">{t.text}</span>
                   {!done && t.priority === 'high' && (
-                    <Badge variant="outline" className="text-[10px] text-primary border-primary/30 shrink-0">
-                      <AlertTriangle className="h-3 w-3 mr-0.5" /> High Priority
+                    <Badge variant="outline" className="text-[9px] sm:text-[10px] text-primary border-primary/30 shrink-0 hidden sm:inline-flex">
+                      <AlertTriangle className="h-3 w-3 mr-0.5" /> High
                     </Badge>
                   )}
-                  {!done && t.priority === 'medium' && (
-                    <span className="text-[10px] text-chart-3">(Medium Priority)</span>
-                  )}
-                  {!done && t.priority === 'low' && (
-                    <span className="text-[10px] text-muted-foreground">(Low Priority)</span>
-                  )}
-                  {done && <Check className="h-4 w-4 text-success shrink-0" />}
+                  {done && <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-success shrink-0" />}
                 </button>
               );
             })}
@@ -378,72 +368,74 @@ export default function DashboardOverview() {
         </div>
 
         {/* Benchmark Comparison */}
-        <div className="glass-card p-5 relative overflow-hidden">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-foreground">Benchmark Comparison</h2>
+        <div className="glass-card p-4 sm:p-5 relative overflow-hidden">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="text-sm sm:text-base font-semibold text-foreground">Benchmark Comparison</h2>
             <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-4 w-4" /></Button>
           </div>
           <div className={`${profile?.plan === 'free' ? 'blur-sm select-none' : ''}`}>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border/30">
-                  <th className="text-left pb-2 text-muted-foreground font-medium"></th>
-                  <th className="text-right pb-2 text-muted-foreground font-medium text-xs">Artist</th>
-                  <th className="text-right pb-2 text-muted-foreground font-medium text-xs">Industry Average</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/20">
-                {[
-                  { label: 'Audience Growth', artist: `${kpis.followerGrowth >= 0 ? '+' : ''}${kpis.followerGrowth}%`, avg: '+1.8%', positive: kpis.followerGrowth >= 1.8 },
-                  { label: 'Engagement', artist: `${kpis.engagement.toFixed(1)}%`, avg: '3.5%', positive: kpis.engagement >= 3.5 },
-                  { label: 'Reach', artist: formatNumber(kpis.views), avg: formatNumber(50000), positive: kpis.views >= 50000 },
-                  { label: 'Streams', artist: formatNumber(kpis.followers), avg: formatNumber(10000), positive: kpis.followers >= 10000 },
-                ].map(row => (
-                  <tr key={row.label}>
-                    <td className="py-2.5 text-foreground">{row.label}</td>
-                    <td className={`py-2.5 text-right font-medium ${row.positive ? 'text-success' : 'text-destructive'}`}>{row.artist}</td>
-                    <td className="py-2.5 text-right text-muted-foreground">{row.avg}</td>
+            <div className="overflow-x-auto -mx-1">
+              <table className="w-full text-xs sm:text-sm min-w-[280px]">
+                <thead>
+                  <tr className="border-b border-border/30">
+                    <th className="text-left pb-2 text-muted-foreground font-medium"></th>
+                    <th className="text-right pb-2 text-muted-foreground font-medium text-[10px] sm:text-xs">Artist</th>
+                    <th className="text-right pb-2 text-muted-foreground font-medium text-[10px] sm:text-xs">Avg</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-border/20">
+                  {[
+                    { label: 'Growth', artist: `${kpis.followerGrowth >= 0 ? '+' : ''}${kpis.followerGrowth}%`, avg: '+1.8%', positive: kpis.followerGrowth >= 1.8 },
+                    { label: 'Engagement', artist: `${kpis.engagement.toFixed(1)}%`, avg: '3.5%', positive: kpis.engagement >= 3.5 },
+                    { label: 'Reach', artist: formatNumber(kpis.views), avg: formatNumber(50000), positive: kpis.views >= 50000 },
+                    { label: 'Streams', artist: formatNumber(kpis.followers), avg: formatNumber(10000), positive: kpis.followers >= 10000 },
+                  ].map(row => (
+                    <tr key={row.label}>
+                      <td className="py-2 text-foreground">{row.label}</td>
+                      <td className={`py-2 text-right font-medium ${row.positive ? 'text-success' : 'text-destructive'}`}>{row.artist}</td>
+                      <td className="py-2 text-right text-muted-foreground">{row.avg}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
           {profile?.plan === 'free' && (
             <div className="absolute inset-0 flex items-center justify-center bg-card/60 backdrop-blur-sm rounded-2xl">
               <div className="text-center">
                 <Lock className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-                <p className="font-semibold text-foreground mb-2">Disponibil în Pro</p>
+                <p className="font-semibold text-foreground mb-2 text-sm">Disponibil în Pro</p>
                 <Button size="sm" asChild><Link to="/pricing">Upgrade</Link></Button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Platform Status — real brand icons */}
-        <div className="glass-card p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-foreground">Platform Status</h2>
+        {/* Platform Status */}
+        <div className="glass-card p-4 sm:p-5 md:col-span-2 lg:col-span-1">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="text-sm sm:text-base font-semibold text-foreground">Platform Status</h2>
             <Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-4 w-4" /></Button>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2.5 sm:space-y-3">
             {Object.entries(PLATFORM_ICON_MAP).map(([key, p]) => {
               const isConnected = connectedPlatforms.some(c => c.platform === key);
               const IconComponent = p.icon;
               return (
                 <div key={key} className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-9 w-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: p.bgColor }}>
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: p.bgColor }}>
                       <IconComponent />
                     </div>
-                    <span className="text-sm font-medium text-foreground">{p.label}</span>
+                    <span className="text-xs sm:text-sm font-medium text-foreground">{p.label}</span>
                   </div>
                   {isConnected ? (
-                    <Badge variant="outline" className="text-[10px] text-success border-success/30 bg-success/10 px-2.5">
-                      <Check className="h-3 w-3 mr-1" /> CONNECTED
+                    <Badge variant="outline" className="text-[9px] sm:text-[10px] text-success border-success/30 bg-success/10 px-2">
+                      <Check className="h-3 w-3 mr-0.5 sm:mr-1" /> OK
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="text-[10px] text-muted-foreground border-border px-2.5">
-                      DISCONNECTED
+                    <Badge variant="outline" className="text-[9px] sm:text-[10px] text-muted-foreground border-border px-2">
+                      OFF
                     </Badge>
                   )}
                 </div>
@@ -454,25 +446,25 @@ export default function DashboardOverview() {
       </div>
 
       {/* Followers Chart */}
-      <div className="glass-card p-6 relative z-10">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold text-foreground">Followers per platformă</h2>
+      <div className="glass-card p-4 sm:p-6 relative z-10">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-4">
+          <h2 className="text-sm sm:text-base font-semibold text-foreground">Followers per platformă</h2>
           <div className="flex gap-1">
             {['7d', '30d', '90d', '1y'].map(p => (
-              <Button key={p} variant={period === p ? 'default' : 'ghost'} size="sm" className="h-7 text-xs" onClick={() => setPeriod(p)}>
+              <Button key={p} variant={period === p ? 'default' : 'ghost'} size="sm" className="h-6 sm:h-7 text-[10px] sm:text-xs px-2 sm:px-3" onClick={() => setPeriod(p)}>
                 {p}
               </Button>
             ))}
           </div>
         </div>
         {chartData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={220}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
-              <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px', color: 'hsl(var(--foreground))' }} />
-              <Legend />
+              <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={10} tick={{ fontSize: 10 }} />
+              <YAxis stroke="hsl(var(--muted-foreground))" fontSize={10} tick={{ fontSize: 10 }} width={40} />
+              <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '12px', color: 'hsl(var(--foreground))', fontSize: '12px' }} />
+              <Legend wrapperStyle={{ fontSize: '11px' }} />
               {activePlatforms.map(p => (
                 <Line key={p} type="monotone" dataKey={p} stroke={PLATFORM_COLORS[p] || '#888'} strokeWidth={2} dot={false} name={p.charAt(0).toUpperCase() + p.slice(1)} />
               ))}
