@@ -71,50 +71,50 @@ export default function Recommendations() {
   if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
-    <div className="animate-fade-in space-y-6 sparkle-container warm-gradient-top">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative z-10">
+    <div className="animate-fade-in space-y-4 sm:space-y-6 sparkle-container warm-gradient-top">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 relative z-10">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Recomandări</h1>
-          <p className="text-muted-foreground text-sm mt-1">Recomandări personalizate bazate pe datele din ultimele 7 zile</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Recomandări</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm mt-1">Bazate pe datele din ultimele 7 zile</p>
         </div>
         {healthScore && (
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-primary/10 border border-primary/20">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="text-sm font-medium text-foreground">Health Score: {healthScore.overall_score}/100</span>
+          <div className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-primary/10 border border-primary/20 self-start sm:self-auto">
+            <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
+            <span className="text-xs sm:text-sm font-medium text-foreground">Health: {healthScore.overall_score}/100</span>
           </div>
         )}
       </div>
 
       {/* Summary counts */}
-      <div className="grid sm:grid-cols-3 gap-4 relative z-10">
+      <div className="grid grid-cols-3 gap-2 sm:gap-4 relative z-10">
         {(['high', 'medium', 'low'] as const).map(priority => {
           const count = displayRecs.filter(r => r.priority === priority).length;
           const config = PRIORITY_CONFIG[priority];
           return (
-            <div key={priority} className="glass-card p-4 flex items-center gap-3 backdrop-blur-lg">
-              <div className={`h-3 w-3 rounded-full ${config.dotColor}`} />
-              <div><p className="text-2xl font-bold text-foreground">{count}</p><p className="text-xs text-muted-foreground">{config.label}</p></div>
+            <div key={priority} className="glass-card p-3 sm:p-4 flex items-center gap-2 sm:gap-3 backdrop-blur-lg">
+              <div className={`h-2.5 w-2.5 sm:h-3 sm:w-3 rounded-full ${config.dotColor} shrink-0`} />
+              <div><p className="text-lg sm:text-2xl font-bold text-foreground">{count}</p><p className="text-[10px] sm:text-xs text-muted-foreground">{config.label}</p></div>
             </div>
           );
         })}
       </div>
 
-      {/* Recommendation cards with colored left border */}
-      <div className="space-y-4 relative z-10">
+      {/* Recommendation cards */}
+      <div className="space-y-3 sm:space-y-4 relative z-10">
         {displayRecs.map((rec, idx) => {
           const priorityConfig = PRIORITY_CONFIG[rec.priority] || PRIORITY_CONFIG.low;
           const platformColor = PLATFORM_COLORS[rec.platform] || PLATFORM_COLORS.general;
           return (
-            <div key={rec.id || idx} className={`glass-card p-5 border-l-4 ${priorityConfig.borderColor} hover:border-primary/30 transition-colors backdrop-blur-lg`}>
-              <div className="flex items-start gap-4">
-                <div className={`h-2.5 w-2.5 rounded-full ${priorityConfig.dotColor} mt-1.5 shrink-0`} />
+            <div key={rec.id || idx} className={`glass-card p-3 sm:p-5 border-l-4 ${priorityConfig.borderColor} hover:border-primary/30 transition-colors backdrop-blur-lg`}>
+              <div className="flex items-start gap-2.5 sm:gap-4">
+                <div className={`h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full ${priorityConfig.dotColor} mt-1.5 shrink-0`} />
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${platformColor}`}>{rec.platform === 'general' ? 'Strategie' : rec.platform.charAt(0).toUpperCase() + rec.platform.slice(1)}</span>
-                    {rec.category && <span className="px-2 py-0.5 rounded-md text-xs bg-muted text-muted-foreground">{rec.category}</span>}
+                  <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2 flex-wrap">
+                    <span className={`px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-medium ${platformColor}`}>{rec.platform === 'general' ? 'Strategie' : rec.platform.charAt(0).toUpperCase() + rec.platform.slice(1)}</span>
+                    {rec.category && <span className="px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-xs bg-muted text-muted-foreground">{rec.category}</span>}
                   </div>
-                  <h3 className="text-base font-semibold text-foreground mb-1">{rec.recommendation}</h3>
-                  <p className="text-sm text-muted-foreground">{rec.reasoning}</p>
+                  <h3 className="text-sm sm:text-base font-semibold text-foreground mb-0.5 sm:mb-1">{rec.recommendation}</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground">{rec.reasoning}</p>
                 </div>
               </div>
             </div>
@@ -123,13 +123,13 @@ export default function Recommendations() {
       </div>
 
       {['pro', 'agency'].includes(userPlan) && (
-        <div className="glass-card p-6 bg-gradient-to-r from-primary/10 to-primary/5 flex flex-col sm:flex-row items-center gap-4 relative z-10">
-          <Sparkles className="h-8 w-8 text-primary shrink-0" />
+        <div className="glass-card p-4 sm:p-6 bg-gradient-to-r from-primary/10 to-primary/5 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 relative z-10">
+          <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
           <div className="flex-1 text-center sm:text-left">
-            <h3 className="text-base font-semibold text-foreground">Vrei sfaturi mai detaliate?</h3>
-            <p className="text-sm text-muted-foreground">Întreabă AI-ul nostru despre strategii personalizate.</p>
+            <h3 className="text-sm sm:text-base font-semibold text-foreground">Vrei sfaturi mai detaliate?</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground">Întreabă AI-ul nostru despre strategii personalizate.</p>
           </div>
-          <Button asChild><Link to="/dashboard/ai-chat">Deschide AI Chat <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+          <Button asChild size="sm" className="w-full sm:w-auto"><Link to="/dashboard/ai-chat">AI Chat <ArrowRight className="ml-2 h-3.5 w-3.5" /></Link></Button>
         </div>
       )}
     </div>
