@@ -136,11 +136,10 @@ function PlatformMetricsTable({ metrics, platform }: { metrics: MetricRow[]; pla
               <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Followers</th>
               <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Views</th>
               <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Likes</th>
-              <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Comments</th>
-              <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Shares</th>
               <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Posts</th>
+              <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Videos</th>
               <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Eng%</th>
-              <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Streams</th>
+              <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Plays</th>
             </tr>
           </thead>
           <tbody>
@@ -150,9 +149,8 @@ function PlatformMetricsTable({ metrics, platform }: { metrics: MetricRow[]; pla
                 <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.followers || 0)}</td>
                 <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.total_views || 0)}</td>
                 <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.likes || 0)}</td>
-                <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.posts_count || 0)}</td>
-                <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.new_followers_today || 0)}</td>
                 <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{row.posts_count || 0}</td>
+                <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{row.videos_count || 0}</td>
                 <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{(row.engagement_rate || 0).toFixed(2)}%</td>
                 <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.total_plays || 0)}</td>
               </tr>
