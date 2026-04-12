@@ -403,6 +403,81 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ── Recalculate health scores for all users who had metrics collected ──
+    const userIds = [...new Set(results.filter(r => r.success).map((_, i) => platforms![i]?.user_id).filter(Boolean))];
+    
+    for (const userId of userIds) {
+      try {
+        const { data: userMetrics } = await supabase
+          .from("metrics_daily")
+          .select("*")
+          .eq("user_id", userId)
+          .order("metric_date", { ascending: false })
+          .limit(30);
+
+        if (!userMetrics || userMetrics.length === 0) continue;
+
+        const latest: Record<string, any> = {};
+        const prev: Record<string, any> = {};
+        userMetrics.forEach((m: any) => {
+          if (!latest[m.platform]) latest[m.platform] = m;
+          else if (!prev[m.platform]) prev[m.platform] = m;
+        });
+
+        const latestVals = Object.values(latest);
+        const prevVals = Object.values(prev);
+
+        // Consistency: based on posts_count and days_since_last_post
+        const totalPosts = latestVals.reduce((s, v) => s + (v.posts_count || 0) + (v.videos_count || 0), 0);
+        const avgDaysSincePost = latestVals.reduce((s, v) => s + (v.days_since_last_post || 0), 0) / (latestVals.length || 1);
+        const consistencyScore = Math.min(100, Math.max(0,
+          totalPosts > 0 ? Math.min(100, totalPosts * 2) - Math.min(50, avgDaysSincePost * 10) : 5
+        ));
+
+        // Growth: based on follower growth between periods
+        const totalFollowersNow = latestVals.reduce((s, v) => s + (v.followers || 0), 0);
+        const totalFollowersPrev = prevVals.reduce((s, v) => s + (v.followers || 0), 0);
+        const followerGrowthPct = totalFollowersPrev > 0 ? ((totalFollowersNow - totalFollowersPrev) / totalFollowersPrev) * 100 : 0;
+        const growthScore = Math.min(100, Math.max(0, 50 + followerGrowthPct * 10));
+
+        // Engagement: average engagement rate across platforms
+        const avgEngagement = latestVals.length ? latestVals.reduce((s, v) => s + (parseFloat(v.engagement_rate) || 0), 0) / latestVals.length : 0;
+        const engagementScore = Math.min(100, Math.max(0, avgEngagement * 15));
+
+        // Reach: based on total followers and views
+        const totalViews = latestVals.reduce((s, v) => s + (v.total_views || 0), 0);
+        const reachScore = Math.min(100, Math.max(0,
+          (totalFollowersNow > 100000 ? 40 : totalFollowersNow > 10000 ? 25 : totalFollowersNow > 1000 ? 15 : 5) +
+          (totalViews > 1000000 ? 40 : totalViews > 100000 ? 25 : totalViews > 10000 ? 15 : 5) +
+          (latestVals.length * 5)
+        ));
+
+        // Momentum: combination of growth + recent activity
+        const momentumScore = Math.min(100, Math.max(0, (growthScore * 0.6 + consistencyScore * 0.4)));
+
+        const overallScore = Math.round(
+          consistencyScore * 0.2 + growthScore * 0.2 + engagementScore * 0.2 + reachScore * 0.2 + momentumScore * 0.2
+        );
+
+        const scoreDate = new Date().toISOString().split("T")[0];
+
+        await supabase.from("artist_health_scores").upsert({
+          user_id: userId,
+          score_date: scoreDate,
+          overall_score: overallScore,
+          consistency_score: Math.round(consistencyScore),
+          growth_score: Math.round(growthScore),
+          engagement_score: Math.round(engagementScore),
+          reach_score: Math.round(reachScore),
+          momentum_score: Math.round(momentumScore),
+        }, { onConflict: "user_id,score_date" });
+
+        console.log(`Health score updated for user ${userId}: ${overallScore}/100`);
+      } catch (healthErr) {
+        console.error(`Health score calc error for user ${userId}:`, healthErr);
+      }
+    }
+
     return new Response(JSON.stringify({ date: today, results }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
