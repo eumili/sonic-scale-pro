@@ -21,14 +21,20 @@ const PLATFORM_LABELS: Record<string, string> = {
 interface MetricRow {
   metric_date: string;
   platform: string;
-  followers_count: number;
-  likes_count: number;
-  comments_count: number;
-  views_count: number;
+  followers: number;
+  subscribers: number;
+  monthly_listeners: number;
+  total_plays: number;
+  total_views: number;
+  likes: number;
   posts_count: number;
-  shares_count: number;
+  videos_count: number;
   engagement_rate: number;
-  streams_count: number;
+  avg_views_per_video: number;
+  playlist_count: number;
+  new_followers_today: number;
+  new_plays_today: number;
+  days_since_last_post: number;
 }
 
 interface YouTubeVideo {
@@ -94,13 +100,13 @@ function PlatformMetricsTable({ metrics, platform }: { metrics: MetricRow[]; pla
       {(() => {
         const latest = filtered[0];
         const prev = filtered.length > 1 ? filtered[1] : null;
-        const followerGrowth = prev ? ((latest.followers_count - prev.followers_count) / (prev.followers_count || 1)) * 100 : 0;
+        const followerGrowth = prev ? ((latest.followers - prev.followers) / (prev.followers || 1)) * 100 : 0;
         const engGrowth = prev ? latest.engagement_rate - prev.engagement_rate : 0;
         return (
           <div className="grid grid-cols-2 gap-2 sm:gap-4 sm:grid-cols-4">
             <div className="glass-card p-3 sm:p-4">
               <span className="text-[10px] sm:text-xs text-muted-foreground">Followers</span>
-              <p className="text-lg sm:text-2xl font-bold text-foreground">{formatNumber(latest.followers_count || 0)}</p>
+              <p className="text-lg sm:text-2xl font-bold text-foreground">{formatNumber(latest.followers || 0)}</p>
               <GrowthBadge value={followerGrowth} />
             </div>
             <div className="glass-card p-3 sm:p-4">
@@ -110,11 +116,11 @@ function PlatformMetricsTable({ metrics, platform }: { metrics: MetricRow[]; pla
             </div>
             <div className="glass-card p-3 sm:p-4">
               <span className="text-[10px] sm:text-xs text-muted-foreground">Views</span>
-              <p className="text-lg sm:text-2xl font-bold text-foreground">{formatNumber(latest.views_count || 0)}</p>
+              <p className="text-lg sm:text-2xl font-bold text-foreground">{formatNumber(latest.total_views || 0)}</p>
             </div>
             <div className="glass-card p-3 sm:p-4">
               <span className="text-[10px] sm:text-xs text-muted-foreground">Likes</span>
-              <p className="text-lg sm:text-2xl font-bold text-foreground">{formatNumber(latest.likes_count || 0)}</p>
+              <p className="text-lg sm:text-2xl font-bold text-foreground">{formatNumber(latest.likes || 0)}</p>
             </div>
           </div>
         );
@@ -130,25 +136,23 @@ function PlatformMetricsTable({ metrics, platform }: { metrics: MetricRow[]; pla
               <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Followers</th>
               <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Views</th>
               <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Likes</th>
-              <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Comments</th>
-              <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Shares</th>
               <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Posts</th>
+              <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Videos</th>
               <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Eng%</th>
-              <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Streams</th>
+              <th className="text-right py-1.5 sm:py-2 px-1 sm:px-2">Plays</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map(row => (
               <tr key={row.metric_date} className="border-b border-border/30 hover:bg-white/5 transition-colors">
                 <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-foreground whitespace-nowrap">{row.metric_date}</td>
-                <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.followers_count || 0)}</td>
-                <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.views_count || 0)}</td>
-                <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.likes_count || 0)}</td>
-                <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.comments_count || 0)}</td>
-                <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.shares_count || 0)}</td>
+                <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.followers || 0)}</td>
+                <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.total_views || 0)}</td>
+                <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.likes || 0)}</td>
                 <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{row.posts_count || 0}</td>
+                <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{row.videos_count || 0}</td>
                 <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{(row.engagement_rate || 0).toFixed(2)}%</td>
-                <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.streams_count || 0)}</td>
+                <td className="py-1.5 sm:py-2 px-1 sm:px-2 text-right text-foreground">{formatNumber(row.total_plays || 0)}</td>
               </tr>
             ))}
           </tbody>
@@ -216,10 +220,10 @@ export default function Analytics() {
     const byDate: Record<string, Record<string, any>> = {};
     metrics.forEach(m => {
       if (!byDate[m.metric_date]) byDate[m.metric_date] = { date: m.metric_date };
-      byDate[m.metric_date][`${m.platform}_followers`] = m.followers_count;
+      byDate[m.metric_date][`${m.platform}_followers`] = m.followers;
       byDate[m.metric_date][`${m.platform}_engagement`] = m.engagement_rate;
-      byDate[m.metric_date][`${m.platform}_views`] = m.views_count;
-      byDate[m.metric_date][`${m.platform}_likes`] = m.likes_count;
+      byDate[m.metric_date][`${m.platform}_views`] = m.total_views;
+      byDate[m.metric_date][`${m.platform}_likes`] = m.likes;
     });
     return Object.values(byDate);
   }, [metrics]);
@@ -232,9 +236,9 @@ export default function Analytics() {
     metrics.forEach(m => { if (!latest[m.platform] || m.metric_date > latest[m.platform].metric_date) latest[m.platform] = m; });
     const vals = Object.values(latest);
     return {
-      followers: vals.reduce((s, v) => s + (v.followers_count || 0), 0),
+      followers: vals.reduce((s, v) => s + (v.followers || 0), 0),
       engagement: vals.length ? vals.reduce((s, v) => s + (v.engagement_rate || 0), 0) / vals.length : 0,
-      views: vals.reduce((s, v) => s + (v.views_count || 0), 0),
+      views: vals.reduce((s, v) => s + (v.total_views || 0), 0),
       posts: vals.reduce((s, v) => s + (v.posts_count || 0), 0),
     };
   }, [metrics]);
@@ -249,7 +253,7 @@ export default function Analytics() {
     });
     return Object.entries(latest).map(([platform, lat]) => {
       const p = prev[platform];
-      const followerGrowth = p ? ((lat.followers_count - p.followers_count) / (p.followers_count || 1)) * 100 : 0;
+      const followerGrowth = p ? ((lat.followers - p.followers) / (p.followers || 1)) * 100 : 0;
       return { platform, ...lat, followerGrowth };
     });
   }, [metrics]);
@@ -346,7 +350,7 @@ export default function Analytics() {
                       </div>
                       <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
                         <div>
-                          <p className="text-sm sm:text-lg font-bold text-foreground">{formatNumber(pb.followers_count || 0)}</p>
+                          <p className="text-sm sm:text-lg font-bold text-foreground">{formatNumber(pb.followers || 0)}</p>
                           <p className="text-[9px] sm:text-[10px] text-muted-foreground">Followers</p>
                         </div>
                         <div>
@@ -354,7 +358,7 @@ export default function Analytics() {
                           <p className="text-[9px] sm:text-[10px] text-muted-foreground">Engagement</p>
                         </div>
                         <div>
-                          <p className="text-sm sm:text-lg font-bold text-foreground">{formatNumber(pb.views_count || 0)}</p>
+                          <p className="text-sm sm:text-lg font-bold text-foreground">{formatNumber(pb.total_views || 0)}</p>
                           <p className="text-[9px] sm:text-[10px] text-muted-foreground">Views</p>
                         </div>
                       </div>
