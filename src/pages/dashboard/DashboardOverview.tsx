@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Check, Music, Loader2, MoreHorizontal, Lock, ArrowUp, AlertTriangle } from 'lucide-react';
+import { Check, Music, Loader2, MoreHorizontal, Lock, ArrowUp, AlertTriangle, Eye, ThumbsUp, MessageCircle, Users, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
@@ -115,6 +115,195 @@ function HealthGauge({ score }: { score: number }) {
 const PLATFORM_COLORS: Record<string, string> = {
   youtube: '#EF4444', spotify: '#22C55E', instagram: '#EC4899', tiktok: '#A78BFA', apple_music: '#F472B6',
 };
+
+/* ── YouTube Audit Card ── */
+function YouTubeAuditCard({ metrics, connectedPlatforms }: { metrics: any[]; connectedPlatforms: any[] }) {
+  const isConnected = connectedPlatforms.some(p => p.platform === 'youtube');
+  const ytMetrics = metrics.filter(m => m.platform === 'youtube');
+
+  const audit = useMemo(() => {
+    if (ytMetrics.length === 0) return null;
+
+    const latest = ytMetrics.reduce((a, b) => (a.metric_date > b.metric_date ? a : b));
+    const earliest = ytMetrics.reduce((a, b) => (a.metric_date < b.metric_date ? a : b));
+
+    const subscribers = latest.followers || 0;
+    const totalViews = latest.total_views || 0;
+    const videos = latest.videos_count || 0;
+    const engagementRate = parseFloat(latest.engagement_rate) || 0;
+    const likes = latest.likes || 0;
+    const comments = latest.posts_count || 0;
+
+    const subGrowth = earliest.followers > 0
+      ? ((subscribers - (earliest.followers || 0)) / earliest.followers * 100) : 0;
+    const viewGrowth = earliest.total_views > 0
+      ? ((totalViews - (earliest.total_views || 0)) / earliest.total_views * 100) : 0;
+
+    const avgViewsPerVideo = videos > 0 ? Math.round(totalViews / videos) : 0;
+    const subToViewRatio = subscribers > 0 ? ((totalViews / subscribers) * 100).toFixed(1) : '0';
+
+    // Simple score calculation
+    let score = 50;
+    if (subGrowth > 5) score += 15; else if (subGrowth > 0) score += 8; else score -= 10;
+    if (engagementRate > 5) score += 15; else if (engagementRate > 2) score += 8; else score -= 5;
+    if (videos > 10) score += 10; else if (videos > 3) score += 5;
+    if (viewGrowth > 10) score += 10; else if (viewGrowth > 0) score += 5;
+    score = Math.max(0, Math.min(100, score));
+
+    const grade = score >= 85 ? 'A' : score >= 70 ? 'B' : score >= 50 ? 'C' : score >= 30 ? 'D' : 'F';
+    const gradeColor = score >= 70 ? 'text-success' : score >= 50 ? 'text-primary' : 'text-destructive';
+
+    return { subscribers, totalViews, videos, engagementRate, likes, comments, subGrowth, viewGrowth, avgViewsPerVideo, subToViewRatio, score, grade, gradeColor };
+  }, [ytMetrics]);
+
+  const formatNum = (n: number) => {
+    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
+    if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
+    return n.toLocaleString();
+  };
+
+  if (!isConnected) {
+    return (
+      <div className="glass-card p-4 sm:p-6 relative z-10">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(239,68,68,0.12)' }}>
+            <YouTubeIcon />
+          </div>
+          <h2 className="text-sm sm:text-base font-semibold text-foreground">YouTube Audit</h2>
+        </div>
+        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+          <Video className="h-10 w-10 mb-3 opacity-40" />
+          <p className="text-sm font-medium">YouTube nu este conectat</p>
+          <p className="text-xs mt-1">Conectează-ți canalul pentru a vedea auditul complet.</p>
+          <Button size="sm" className="mt-3" asChild>
+            <Link to="/dashboard/platforms">Conectează YouTube</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!audit) {
+    return (
+      <div className="glass-card p-4 sm:p-6 relative z-10">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(239,68,68,0.12)' }}>
+            <YouTubeIcon />
+          </div>
+          <h2 className="text-sm sm:text-base font-semibold text-foreground">YouTube Audit</h2>
+        </div>
+        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+          <Music className="h-10 w-10 mb-3 opacity-40" />
+          <p className="text-sm">Încă nu sunt date disponibile. Așteaptă sincronizarea.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const statItems = [
+    { icon: Users, label: 'Subscribers', value: formatNum(audit.subscribers), change: audit.subGrowth },
+    { icon: Eye, label: 'Total Views', value: formatNum(audit.totalViews), change: audit.viewGrowth },
+    { icon: Video, label: 'Videos', value: audit.videos.toString(), change: null },
+    { icon: ThumbsUp, label: 'Likes', value: formatNum(audit.likes), change: null },
+    { icon: MessageCircle, label: 'Comments', value: formatNum(audit.comments), change: null },
+    { icon: Eye, label: 'Avg Views/Video', value: formatNum(audit.avgViewsPerVideo), change: null },
+  ];
+
+  return (
+    <div className="glass-card p-4 sm:p-6 relative z-10">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-5">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(239,68,68,0.12)' }}>
+            <YouTubeIcon />
+          </div>
+          <div>
+            <h2 className="text-sm sm:text-base font-semibold text-foreground">YouTube Audit</h2>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Analiza completă a canalului tău</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/30 border border-border/50">
+            <span className="text-xs text-muted-foreground">Score</span>
+            <span className={`text-lg sm:text-xl font-bold ${audit.gradeColor}`}>{audit.score}</span>
+            <span className="text-[10px] text-muted-foreground">/100</span>
+          </div>
+          <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-xl border-2 flex items-center justify-center font-extrabold text-lg sm:text-xl ${audit.gradeColor} ${
+            audit.score >= 70 ? 'border-success/40 bg-success/10' : audit.score >= 50 ? 'border-primary/40 bg-primary/10' : 'border-destructive/40 bg-destructive/10'
+          }`}>
+            {audit.grade}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-4">
+        {statItems.map((item, i) => (
+          <div key={i} className="bg-muted/20 rounded-xl p-3 text-center border border-border/30">
+            <item.icon className="h-4 w-4 text-muted-foreground mx-auto mb-1.5" />
+            <p className="text-lg sm:text-xl font-bold text-foreground">{item.value}</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">{item.label}</p>
+            {item.change !== null && (
+              <span className={`text-[10px] flex items-center justify-center gap-0.5 mt-1 ${item.change >= 0 ? 'text-success' : 'text-destructive'}`}>
+                <ArrowUp className={`h-3 w-3 ${item.change < 0 ? 'rotate-180' : ''}`} />
+                {item.change >= 0 ? '+' : ''}{item.change.toFixed(1)}%
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div className="bg-muted/20 rounded-xl p-3 sm:p-4 border border-border/30">
+          <h3 className="text-xs font-semibold text-foreground mb-2">Key Metrics</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Engagement Rate</span>
+              <span className={`font-semibold ${audit.engagementRate >= 3 ? 'text-success' : audit.engagementRate >= 1 ? 'text-primary' : 'text-destructive'}`}>
+                {audit.engagementRate.toFixed(2)}%
+              </span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Sub/View Ratio</span>
+              <span className="font-semibold text-foreground">{audit.subToViewRatio}%</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Avg Views/Video</span>
+              <span className="font-semibold text-foreground">{formatNum(audit.avgViewsPerVideo)}</span>
+            </div>
+          </div>
+        </div>
+        <div className="bg-muted/20 rounded-xl p-3 sm:p-4 border border-border/30">
+          <h3 className="text-xs font-semibold text-foreground mb-2">Recomandări</h3>
+          <div className="space-y-1.5">
+            {audit.engagementRate < 3 && (
+              <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                <AlertTriangle className="h-3 w-3 text-primary mt-0.5 shrink-0" />
+                Crește engagement-ul prin CTA-uri mai puternice în video-uri.
+              </p>
+            )}
+            {audit.subGrowth < 2 && (
+              <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                <AlertTriangle className="h-3 w-3 text-primary mt-0.5 shrink-0" />
+                Crșterea subscriberilor e lentă — postează mai consistent.
+              </p>
+            )}
+            {audit.videos < 5 && (
+              <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                <AlertTriangle className="h-3 w-3 text-destructive mt-0.5 shrink-0" />
+                Publică mai mult conținut pentru a crește vizibilitatea.
+              </p>
+            )}
+            {audit.score >= 70 && (
+              <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+                <Check className="h-3 w-3 text-success mt-0.5 shrink-0" />
+                Canalul tău arată bine! Continuă așa.
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardOverview() {
   const { user } = useAuth();
@@ -444,6 +633,9 @@ export default function DashboardOverview() {
           </div>
         </div>
       </div>
+
+      {/* YouTube Audit */}
+      <YouTubeAuditCard metrics={metrics} connectedPlatforms={connectedPlatforms} />
 
       {/* Followers Chart */}
       <div className="glass-card p-4 sm:p-6 relative z-10">
