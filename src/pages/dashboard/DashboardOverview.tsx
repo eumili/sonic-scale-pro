@@ -6,9 +6,6 @@ import { Check, Music, Loader2, MoreHorizontal, Lock, ArrowUp, AlertTriangle, Tr
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
 
 const SCORE_COLORS = [
   { key: 'consistency', label: 'Consistency', barClass: 'metric-bar-consistency' },
