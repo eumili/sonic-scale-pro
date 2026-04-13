@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Check, Music, Loader2, MoreHorizontal, Lock, ArrowUp, AlertTriangle, Eye, ThumbsUp, MessageCircle, Users, Video } from 'lucide-react';
+import { Check, Music, Loader2, MoreHorizontal, Lock, ArrowUp, AlertTriangle, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
@@ -116,73 +116,20 @@ const PLATFORM_COLORS: Record<string, string> = {
   youtube: '#EF4444', spotify: '#22C55E', instagram: '#EC4899', tiktok: '#A78BFA', apple_music: '#F472B6',
 };
 
-/* ── YouTube Audit Card ── */
-function YouTubeAuditCard({ metrics, connectedPlatforms }: { metrics: any[]; connectedPlatforms: any[] }) {
-  const isConnected = connectedPlatforms.some(p => p.platform === 'youtube');
-  const ytMetrics = metrics.filter(m => m.platform === 'youtube');
+/* ── YouTube Audit Card (from youtube_audit table) ── */
+const AUDIT_CATEGORIES: { label: string; fields: { key: string; label: string }[] }[] = [
+  { label: 'Shorts', fields: [{ key: 'shorts_publishing', label: 'Publishing' }, { key: 'shorts_optimization', label: 'Optimization' }, { key: 'shorts_cta', label: 'CTA' }] },
+  { label: 'Playlists', fields: [{ key: 'playlists_status', label: 'Status' }, { key: 'playlists_optimization', label: 'Optimization' }, { key: 'playlists_traffic', label: 'Traffic' }] },
+  { label: 'Thumbnails', fields: [{ key: 'thumbnails_custom_design', label: 'Custom Design' }, { key: 'thumbnails_ctr', label: 'CTR' }] },
+  { label: 'Community', fields: [{ key: 'community_frequent_posts', label: 'Posts' }, { key: 'community_music_promotion', label: 'Music Promo' }, { key: 'community_discussions', label: 'Discussions' }] },
+  { label: 'Other', fields: [{ key: 'end_screens_status', label: 'End Screens' }, { key: 'cards_status', label: 'Cards' }, { key: 'description_quality', label: 'Descriptions' }, { key: 'channel_cover_status', label: 'Cover' }, { key: 'artist_profile_status', label: 'Profile' }] },
+  { label: 'Video SEO', fields: [{ key: 'titles_tags_quality', label: 'Titles & Tags' }, { key: 'keywords_in_desc', label: 'Keywords' }, { key: 'artist_ranking_keywords', label: 'Ranking' }] },
+  { label: 'Channel SEO', fields: [{ key: 'channel_tags_status', label: 'Tags' }, { key: 'channel_seo_optimization', label: 'SEO' }, { key: 'backlinks_structure', label: 'Backlinks' }] },
+];
 
-  const audit = useMemo(() => {
-    if (ytMetrics.length === 0) return null;
+const DOT_COLORS: Record<string, string> = { green: 'bg-success', yellow: 'bg-yellow-500', red: 'bg-destructive' };
 
-    const latest = ytMetrics.reduce((a, b) => (a.metric_date > b.metric_date ? a : b));
-    const earliest = ytMetrics.reduce((a, b) => (a.metric_date < b.metric_date ? a : b));
-
-    const subscribers = latest.followers || 0;
-    const totalViews = latest.total_views || 0;
-    const videos = latest.videos_count || 0;
-    const engagementRate = parseFloat(latest.engagement_rate) || 0;
-    const likes = latest.likes || 0;
-    const comments = latest.posts_count || 0;
-
-    const subGrowth = earliest.followers > 0
-      ? ((subscribers - (earliest.followers || 0)) / earliest.followers * 100) : 0;
-    const viewGrowth = earliest.total_views > 0
-      ? ((totalViews - (earliest.total_views || 0)) / earliest.total_views * 100) : 0;
-
-    const avgViewsPerVideo = videos > 0 ? Math.round(totalViews / videos) : 0;
-    const subToViewRatio = subscribers > 0 ? ((totalViews / subscribers) * 100).toFixed(1) : '0';
-
-    // Simple score calculation
-    let score = 50;
-    if (subGrowth > 5) score += 15; else if (subGrowth > 0) score += 8; else score -= 10;
-    if (engagementRate > 5) score += 15; else if (engagementRate > 2) score += 8; else score -= 5;
-    if (videos > 10) score += 10; else if (videos > 3) score += 5;
-    if (viewGrowth > 10) score += 10; else if (viewGrowth > 0) score += 5;
-    score = Math.max(0, Math.min(100, score));
-
-    const grade = score >= 85 ? 'A' : score >= 70 ? 'B' : score >= 50 ? 'C' : score >= 30 ? 'D' : 'F';
-    const gradeColor = score >= 70 ? 'text-success' : score >= 50 ? 'text-primary' : 'text-destructive';
-
-    return { subscribers, totalViews, videos, engagementRate, likes, comments, subGrowth, viewGrowth, avgViewsPerVideo, subToViewRatio, score, grade, gradeColor };
-  }, [ytMetrics]);
-
-  const formatNum = (n: number) => {
-    if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M';
-    if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K';
-    return n.toLocaleString();
-  };
-
-  if (!isConnected) {
-    return (
-      <div className="glass-card p-4 sm:p-6 relative z-10">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(239,68,68,0.12)' }}>
-            <YouTubeIcon />
-          </div>
-          <h2 className="text-sm sm:text-base font-semibold text-foreground">YouTube Audit</h2>
-        </div>
-        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
-          <Video className="h-10 w-10 mb-3 opacity-40" />
-          <p className="text-sm font-medium">YouTube nu este conectat</p>
-          <p className="text-xs mt-1">Conectează-ți canalul pentru a vedea auditul complet.</p>
-          <Button size="sm" className="mt-3" asChild>
-            <Link to="/dashboard/platforms">Conectează YouTube</Link>
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
+function YouTubeAuditCard({ audit }: { audit: any | null }) {
   if (!audit) {
     return (
       <div className="glass-card p-4 sm:p-6 relative z-10">
@@ -194,112 +141,123 @@ function YouTubeAuditCard({ metrics, connectedPlatforms }: { metrics: any[]; con
         </div>
         <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
           <Music className="h-10 w-10 mb-3 opacity-40" />
-          <p className="text-sm">Încă nu sunt date disponibile. Așteaptă sincronizarea.</p>
+          <p className="text-sm">Auditul YouTube va fi disponibil în curând.</p>
         </div>
       </div>
     );
   }
 
-  const statItems = [
-    { icon: Users, label: 'Subscribers', value: formatNum(audit.subscribers), change: audit.subGrowth },
-    { icon: Eye, label: 'Total Views', value: formatNum(audit.totalViews), change: audit.viewGrowth },
-    { icon: Video, label: 'Videos', value: audit.videos.toString(), change: null },
-    { icon: ThumbsUp, label: 'Likes', value: formatNum(audit.likes), change: null },
-    { icon: MessageCircle, label: 'Comments', value: formatNum(audit.comments), change: null },
-    { icon: Eye, label: 'Avg Views/Video', value: formatNum(audit.avgViewsPerVideo), change: null },
-  ];
+  const overallScore = audit.overall_score ?? 0;
+  const starsRating = parseFloat(audit.stars_rating) || 0;
+  const generalSeo = audit.general_seo_score ?? 0;
+  const videoSeo = audit.video_seo_score ?? 0;
+  const interaction = audit.interaction_score ?? 0;
+  const auditDate = audit.audit_date ? new Date(audit.audit_date).toLocaleDateString('ro-RO', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+
+  const circumference = 2 * Math.PI * 40;
+  const offset = circumference - (overallScore / 100) * circumference;
+  const scoreColor = overallScore >= 70 ? 'hsl(142, 71%, 45%)' : overallScore >= 40 ? 'hsl(45, 93%, 47%)' : 'hsl(0, 84%, 60%)';
+
+  const renderStars = (rating: number) => {
+    const full = Math.floor(rating);
+    const partial = rating - full;
+    return (
+      <div className="flex items-center gap-0.5">
+        {Array.from({ length: 5 }, (_, i) => (
+          <Star
+            key={i}
+            className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${i < full ? 'text-yellow-400 fill-yellow-400' : i === full && partial > 0 ? 'text-yellow-400' : 'text-muted-foreground/30'}`}
+            style={i === full && partial > 0 ? { clipPath: `inset(0 ${(1 - partial) * 100}% 0 0)`, fill: 'currentColor' } : undefined}
+          />
+        ))}
+        <span className="text-xs sm:text-sm font-bold text-foreground ml-1.5">{starsRating.toFixed(1)}</span>
+        <span className="text-[10px] text-muted-foreground">/5</span>
+      </div>
+    );
+  };
+
+  const progressBar = (label: string, value: number) => {
+    const color = value >= 70 ? 'bg-success' : value >= 40 ? 'bg-yellow-500' : 'bg-destructive';
+    return (
+      <div key={label}>
+        <div className="flex justify-between text-xs mb-1">
+          <span className="text-muted-foreground">{label}</span>
+          <span className="font-semibold text-foreground">{value}%</span>
+        </div>
+        <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
+          <div className={`h-full rounded-full transition-all duration-700 ${color}`} style={{ width: `${value}%` }} />
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="glass-card p-4 sm:p-6 relative z-10">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-5">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(239,68,68,0.12)' }}>
             <YouTubeIcon />
           </div>
           <div>
             <h2 className="text-sm sm:text-base font-semibold text-foreground">YouTube Audit</h2>
-            <p className="text-[10px] sm:text-xs text-muted-foreground">Analiza completă a canalului tău</p>
+            {audit.platform_account_id && (
+              <p className="text-[10px] sm:text-xs text-muted-foreground">{audit.platform_account_id}</p>
+            )}
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-muted/30 border border-border/50">
-            <span className="text-xs text-muted-foreground">Score</span>
-            <span className={`text-lg sm:text-xl font-bold ${audit.gradeColor}`}>{audit.score}</span>
-            <span className="text-[10px] text-muted-foreground">/100</span>
-          </div>
-          <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-xl border-2 flex items-center justify-center font-extrabold text-lg sm:text-xl ${audit.gradeColor} ${
-            audit.score >= 70 ? 'border-success/40 bg-success/10' : audit.score >= 50 ? 'border-primary/40 bg-primary/10' : 'border-destructive/40 bg-destructive/10'
-          }`}>
-            {audit.grade}
-          </div>
+        <div className="flex items-center gap-3 sm:gap-4">
+          {renderStars(starsRating)}
+          <span className="text-[10px] sm:text-xs text-muted-foreground border-l border-border/50 pl-3">{auditDate}</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-4">
-        {statItems.map((item, i) => (
-          <div key={i} className="bg-muted/20 rounded-xl p-3 text-center border border-border/30">
-            <item.icon className="h-4 w-4 text-muted-foreground mx-auto mb-1.5" />
-            <p className="text-lg sm:text-xl font-bold text-foreground">{item.value}</p>
-            <p className="text-[10px] sm:text-xs text-muted-foreground">{item.label}</p>
-            {item.change !== null && (
-              <span className={`text-[10px] flex items-center justify-center gap-0.5 mt-1 ${item.change >= 0 ? 'text-success' : 'text-destructive'}`}>
-                <ArrowUp className={`h-3 w-3 ${item.change < 0 ? 'rotate-180' : ''}`} />
-                {item.change >= 0 ? '+' : ''}{item.change.toFixed(1)}%
-              </span>
-            )}
+      {/* Score + Progress Bars */}
+      <div className="flex flex-col sm:flex-row gap-5 mb-5">
+        {/* Circular score */}
+        <div className="flex justify-center sm:justify-start">
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0">
+            <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--muted)/0.3)" strokeWidth="8" />
+              <circle
+                cx="50" cy="50" r="40" fill="none"
+                stroke={scoreColor} strokeWidth="8" strokeLinecap="round"
+                strokeDasharray={circumference} strokeDashoffset={offset}
+                className="transition-all duration-1000 ease-out"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-2xl sm:text-3xl font-bold text-foreground">{overallScore}</span>
+              <span className="text-[8px] sm:text-[10px] text-muted-foreground uppercase tracking-widest">Overall</span>
+            </div>
+          </div>
+        </div>
+        {/* 3 progress bars */}
+        <div className="flex-1 space-y-3 justify-center flex flex-col">
+          {progressBar('General SEO', generalSeo)}
+          {progressBar('Video SEO', videoSeo)}
+          {progressBar('Interaction', interaction)}
+        </div>
+      </div>
+
+      {/* Category dots */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {AUDIT_CATEGORIES.map(cat => (
+          <div key={cat.label} className="bg-muted/20 rounded-xl p-3 border border-border/30">
+            <h4 className="text-xs font-semibold text-foreground mb-2">{cat.label}</h4>
+            <div className="space-y-1.5">
+              {cat.fields.map(f => {
+                const val: string = audit[f.key] || 'red';
+                return (
+                  <div key={f.key} className="flex items-center gap-2">
+                    <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${DOT_COLORS[val] || 'bg-muted-foreground/30'}`} />
+                    <span className="text-[10px] sm:text-xs text-muted-foreground">{f.label}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ))}
-      </div>
-
-      <div className="grid sm:grid-cols-2 gap-3">
-        <div className="bg-muted/20 rounded-xl p-3 sm:p-4 border border-border/30">
-          <h3 className="text-xs font-semibold text-foreground mb-2">Key Metrics</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Engagement Rate</span>
-              <span className={`font-semibold ${audit.engagementRate >= 3 ? 'text-success' : audit.engagementRate >= 1 ? 'text-primary' : 'text-destructive'}`}>
-                {audit.engagementRate.toFixed(2)}%
-              </span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Sub/View Ratio</span>
-              <span className="font-semibold text-foreground">{audit.subToViewRatio}%</span>
-            </div>
-            <div className="flex justify-between text-xs">
-              <span className="text-muted-foreground">Avg Views/Video</span>
-              <span className="font-semibold text-foreground">{formatNum(audit.avgViewsPerVideo)}</span>
-            </div>
-          </div>
-        </div>
-        <div className="bg-muted/20 rounded-xl p-3 sm:p-4 border border-border/30">
-          <h3 className="text-xs font-semibold text-foreground mb-2">Recomandări</h3>
-          <div className="space-y-1.5">
-            {audit.engagementRate < 3 && (
-              <p className="text-xs text-muted-foreground flex items-start gap-1.5">
-                <AlertTriangle className="h-3 w-3 text-primary mt-0.5 shrink-0" />
-                Crește engagement-ul prin CTA-uri mai puternice în video-uri.
-              </p>
-            )}
-            {audit.subGrowth < 2 && (
-              <p className="text-xs text-muted-foreground flex items-start gap-1.5">
-                <AlertTriangle className="h-3 w-3 text-primary mt-0.5 shrink-0" />
-                Crșterea subscriberilor e lentă — postează mai consistent.
-              </p>
-            )}
-            {audit.videos < 5 && (
-              <p className="text-xs text-muted-foreground flex items-start gap-1.5">
-                <AlertTriangle className="h-3 w-3 text-destructive mt-0.5 shrink-0" />
-                Publică mai mult conținut pentru a crește vizibilitatea.
-              </p>
-            )}
-            {audit.score >= 70 && (
-              <p className="text-xs text-muted-foreground flex items-start gap-1.5">
-                <Check className="h-3 w-3 text-success mt-0.5 shrink-0" />
-                Canalul tău arată bine! Continuă așa.
-              </p>
-            )}
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -312,6 +270,7 @@ export default function DashboardOverview() {
   const [healthScore, setHealthScore] = useState<any>(null);
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [connectedPlatforms, setConnectedPlatforms] = useState<any[]>([]);
+  const [ytAudit, setYtAudit] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30d');
   const [completedTodos, setCompletedTodos] = useState<Set<number>>(new Set());
@@ -325,12 +284,13 @@ export default function DashboardOverview() {
       since.setDate(since.getDate() - days);
       const sinceStr = since.toISOString().split('T')[0];
 
-      const [profileRes, metricsRes, healthRes, recsRes, platformsRes] = await Promise.all([
+      const [profileRes, metricsRes, healthRes, recsRes, platformsRes, ytAuditRes] = await Promise.all([
         supabase.from('profiles').select('*').eq('id', user.id).single(),
         supabase.from('metrics_daily').select('*').eq('user_id', user.id).gte('metric_date', sinceStr).order('metric_date', { ascending: true }),
         supabase.from('artist_health_scores').select('*').eq('user_id', user.id).order('score_date', { ascending: false }).limit(1),
         supabase.from('daily_recommendations').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
         supabase.from('artist_platforms').select('*').eq('user_id', user.id).eq('is_active', true),
+        supabase.from('youtube_audit').select('*').eq('user_id', user.id).order('audit_date', { ascending: false }).limit(1),
       ]);
 
       if (profileRes.data) setProfile(profileRes.data);
@@ -338,6 +298,7 @@ export default function DashboardOverview() {
       if (healthRes.data?.[0]) setHealthScore(healthRes.data[0]);
       setRecommendations(recsRes.data || []);
       setConnectedPlatforms(platformsRes.data || []);
+      setYtAudit(ytAuditRes.data?.[0] || null);
       setLoading(false);
     };
     loadData();
@@ -635,7 +596,7 @@ export default function DashboardOverview() {
       </div>
 
       {/* YouTube Audit */}
-      <YouTubeAuditCard metrics={metrics} connectedPlatforms={connectedPlatforms} />
+      <YouTubeAuditCard audit={ytAudit} />
 
       {/* Followers Chart */}
       <div className="glass-card p-4 sm:p-6 relative z-10">
