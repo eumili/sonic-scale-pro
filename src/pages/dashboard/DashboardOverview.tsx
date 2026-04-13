@@ -305,7 +305,7 @@ function YouTubeAuditCard({ metrics, connectedPlatforms }: { metrics: any[]; con
   );
 }
 
-
+export default function DashboardOverview() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [metrics, setMetrics] = useState<any[]>([]);
