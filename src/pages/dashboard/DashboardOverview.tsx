@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Check, Music, Loader2, MoreHorizontal, Lock, ArrowUp, AlertTriangle, TrendingUp, TrendingDown, Eye, ThumbsUp, MessageCircle, Users, Video, Clock } from 'lucide-react';
+import { Check, Music, Loader2, MoreHorizontal, Lock, ArrowUp, AlertTriangle, Eye, ThumbsUp, MessageCircle, Users, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
