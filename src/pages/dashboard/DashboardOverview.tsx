@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Check, Music, Loader2, MoreHorizontal, Lock, ArrowUp, AlertTriangle, Star, Zap, Info, PartyPopper } from 'lucide-react';
+import { Check, Music, Loader2, MoreHorizontal, Lock, ArrowUp, AlertTriangle, Star, Zap, Info, PartyPopper, Crown } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -131,7 +131,7 @@ const AUDIT_CATEGORIES: { label: string; fields: { key: string; label: string }[
 
 const DOT_COLORS: Record<string, string> = { green: 'bg-success', yellow: 'bg-yellow-500', red: 'bg-destructive' };
 
-function YouTubeAuditCard({ audit }: { audit: any | null }) {
+function YouTubeAuditCard({ audit, isFree }: { audit: any | null; isFree: boolean }) {
   if (!audit) {
     return (
       <div className="glass-card p-4 sm:p-6 relative z-10">
@@ -184,10 +184,16 @@ function YouTubeAuditCard({ audit }: { audit: any | null }) {
       <div key={label}>
         <div className="flex justify-between text-xs mb-1">
           <span className="text-muted-foreground">{label}</span>
-          <span className="font-semibold text-foreground">{value}%</span>
+          {isFree ? (
+            <span className="text-muted-foreground/50">—</span>
+          ) : (
+            <span className="font-semibold text-foreground">{value}%</span>
+          )}
         </div>
         <div className="h-2 bg-muted/30 rounded-full overflow-hidden">
-          <div className={`h-full rounded-full transition-all duration-700 ${color}`} style={{ width: `${value}%` }} />
+          {!isFree && (
+            <div className={`h-full rounded-full transition-all duration-700 ${color}`} style={{ width: `${value}%` }} />
+          )}
         </div>
       </div>
     );
@@ -216,7 +222,6 @@ function YouTubeAuditCard({ audit }: { audit: any | null }) {
 
       {/* Score + Progress Bars */}
       <div className="flex flex-col sm:flex-row gap-5 mb-5">
-        {/* Circular score */}
         <div className="flex justify-center sm:justify-start">
           <div className="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
@@ -234,7 +239,6 @@ function YouTubeAuditCard({ audit }: { audit: any | null }) {
             </div>
           </div>
         </div>
-        {/* 3 progress bars */}
         <div className="flex-1 space-y-3 justify-center flex flex-col">
           {progressBar('General SEO', generalSeo)}
           {progressBar('Video SEO', videoSeo)}
@@ -243,27 +247,47 @@ function YouTubeAuditCard({ audit }: { audit: any | null }) {
       </div>
 
       {/* Category dots */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        {AUDIT_CATEGORIES.map(cat => (
-          <div key={cat.label} className="bg-muted/20 rounded-xl p-3 border border-border/30">
-            <h4 className="text-xs font-semibold text-foreground mb-2">{cat.label}</h4>
-            <div className="space-y-1.5">
-              {cat.fields.map(f => {
-                const val: string = audit[f.key] || 'red';
-                return (
-                  <div key={f.key} className="flex items-center gap-2">
-                    <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${DOT_COLORS[val] || 'bg-muted-foreground/30'}`} />
-                    <span className="text-[10px] sm:text-xs text-muted-foreground">{f.label}</span>
-                  </div>
-                );
-              })}
+      <div className="relative">
+        <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 ${isFree ? 'select-none' : ''}`}>
+          {AUDIT_CATEGORIES.map(cat => (
+            <div key={cat.label} className="bg-muted/20 rounded-xl p-3 border border-border/30">
+              <h4 className="text-xs font-semibold text-foreground mb-2">{cat.label}</h4>
+              <div className="space-y-1.5">
+                {cat.fields.map(f => {
+                  const val: string = audit[f.key] || 'red';
+                  return (
+                    <div key={f.key} className="flex items-center gap-2">
+                      <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${DOT_COLORS[val] || 'bg-muted-foreground/30'}`} />
+                      <span className="text-[10px] sm:text-xs text-muted-foreground">{f.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Free tier overlay on detail area */}
+        {isFree && (
+          <div className="absolute inset-0 flex items-center justify-center bg-card/70 backdrop-blur-sm rounded-xl">
+            <div className="text-center">
+              <Lock className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
+              <p className="font-semibold text-foreground mb-1 text-sm">Detalii complete pe Pro</p>
+              <p className="text-xs text-muted-foreground mb-3">Upgrade pentru valori exacte și detalii indicatori</p>
+              <Button size="sm" asChild className="glow-primary">
+                <Link to="/pricing">
+                  <Crown className="h-3 w-3 mr-1" />
+                  Upgrade
+                </Link>
+              </Button>
             </div>
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
 }
+
 /* ── Personalized Recommendations Card ── */
 interface Recommendation {
   indicator: string;
@@ -276,7 +300,7 @@ interface Recommendation {
   effort: string;
 }
 
-function PersonalizedRecommendationsCard({ recs, loading: isLoading }: { recs: Recommendation[]; loading: boolean }) {
+function PersonalizedRecommendationsCard({ recs, loading: isLoading, isFree }: { recs: Recommendation[]; loading: boolean; isFree: boolean }) {
   const [tab, setTab] = useState<'all' | 'red' | 'yellow'>('all');
 
   if (isLoading) {
@@ -322,6 +346,10 @@ function PersonalizedRecommendationsCard({ recs, loading: isLoading }: { recs: R
     return <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-medium ${color}`}>{effort}</span>;
   };
 
+  // Free tier: show only first recommendation fully, blur rest
+  const freeVisibleCount = 1;
+  const blockedCount = isFree ? Math.max(0, filtered.length - freeVisibleCount) : 0;
+
   return (
     <div className="glass-card p-4 sm:p-6 relative z-10">
       {/* Header */}
@@ -332,7 +360,7 @@ function PersonalizedRecommendationsCard({ recs, loading: isLoading }: { recs: R
         </div>
       </div>
 
-      {/* Tabs */}
+      {/* Tabs - always visible */}
       <div className="flex gap-2 mb-4 overflow-x-auto">
         {tabs.map(t => (
           <button
@@ -356,49 +384,78 @@ function PersonalizedRecommendationsCard({ recs, loading: isLoading }: { recs: R
       {filtered.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-6">Nicio recomandare în această categorie.</p>
       ) : (
-        <Accordion type="single" collapsible className="space-y-2">
-          {filtered.map((rec, idx) => {
-            const isRed = rec.status === 'red';
-            const statusColor = isRed ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-[#eab308]/20 text-[#eab308]';
-            const statusLabel = isRed ? 'URGENT' : 'ATENȚIE';
-            const StatusIcon = isRed ? Zap : Info;
-            const truncatedIssue = rec.issue.length > 80 ? rec.issue.slice(0, 80) + '…' : rec.issue;
+        <div className="relative">
+          <Accordion type="single" collapsible className="space-y-2">
+            {filtered.map((rec, idx) => {
+              const isRed = rec.status === 'red';
+              const statusColor = isRed ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-[#eab308]/20 text-[#eab308]';
+              const statusLabel = isRed ? 'URGENT' : 'ATENȚIE';
+              const StatusIcon = isRed ? Zap : Info;
+              const truncatedIssue = rec.issue.length > 80 ? rec.issue.slice(0, 80) + '…' : rec.issue;
+              const isBlocked = isFree && idx >= freeVisibleCount;
 
-            return (
-              <AccordionItem key={idx} value={`rec-${idx}`} className="border border-border/30 rounded-xl overflow-hidden bg-muted/10">
-                <AccordionTrigger className="px-3 sm:px-4 py-3 hover:no-underline hover:bg-muted/20 [&[data-state=open]>svg]:rotate-180">
-                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 text-left">
-                    <StatusIcon className="h-4 w-4 shrink-0" style={{ color: isRed ? '#ef4444' : '#eab308' }} />
-                    <span className={`text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${statusColor}`}>
-                      {statusLabel}
-                    </span>
-                    <span className="text-[10px] sm:text-xs text-muted-foreground shrink-0">{rec.category}</span>
-                    <span className="text-xs sm:text-sm text-foreground truncate">{truncatedIssue}</span>
-                    <span className="text-[10px] sm:text-xs text-muted-foreground shrink-0 ml-auto hidden sm:inline">
-                      Prioritate #{rec.priority}
-                    </span>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-3 sm:px-4 pb-4 pt-1">
-                  <div className="space-y-3 pl-6 sm:pl-9">
-                    <div>
-                      <p className="text-[10px] sm:text-xs font-semibold text-primary uppercase tracking-wider mb-1">Ce de făcut:</p>
-                      <p className="text-xs sm:text-sm text-foreground/90">{rec.action}</p>
+              return (
+                <AccordionItem
+                  key={idx}
+                  value={`rec-${idx}`}
+                  className={`border border-border/30 rounded-xl overflow-hidden bg-muted/10 ${isBlocked ? 'pointer-events-none' : ''}`}
+                  style={isBlocked ? { filter: 'blur(6px)' } : undefined}
+                >
+                  <AccordionTrigger className="px-3 sm:px-4 py-3 hover:no-underline hover:bg-muted/20 [&[data-state=open]>svg]:rotate-180">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 text-left">
+                      <StatusIcon className="h-4 w-4 shrink-0" style={{ color: isRed ? '#ef4444' : '#eab308' }} />
+                      <span className={`text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${statusColor}`}>
+                        {statusLabel}
+                      </span>
+                      <span className="text-[10px] sm:text-xs text-muted-foreground shrink-0">{rec.category}</span>
+                      <span className="text-xs sm:text-sm text-foreground truncate">{truncatedIssue}</span>
+                      <span className="text-[10px] sm:text-xs text-muted-foreground shrink-0 ml-auto hidden sm:inline">
+                        Prioritate #{rec.priority}
+                      </span>
                     </div>
-                    <div>
-                      <p className="text-[10px] sm:text-xs font-semibold text-primary uppercase tracking-wider mb-1">Impact așteptat:</p>
-                      <p className="text-xs sm:text-sm text-foreground/90">{rec.impact}</p>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-3 sm:px-4 pb-4 pt-1">
+                    <div className="space-y-3 pl-6 sm:pl-9">
+                      <div>
+                        <p className="text-[10px] sm:text-xs font-semibold text-primary uppercase tracking-wider mb-1">Ce de făcut:</p>
+                        <p className="text-xs sm:text-sm text-foreground/90">{rec.action}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] sm:text-xs font-semibold text-primary uppercase tracking-wider mb-1">Impact așteptat:</p>
+                        <p className="text-xs sm:text-sm text-foreground/90">{rec.impact}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-[10px] sm:text-xs font-semibold text-primary uppercase tracking-wider">Efort:</p>
+                        {effortBadge(rec.effort)}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-[10px] sm:text-xs font-semibold text-primary uppercase tracking-wider">Efort:</p>
-                      {effortBadge(rec.effort)}
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            );
-          })}
-        </Accordion>
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
+
+          {/* Free tier overlay on blocked recommendations */}
+          {isFree && blockedCount > 0 && (
+            <div className="absolute inset-x-0 bottom-0 top-20 flex items-center justify-center z-20">
+              <div className="text-center bg-card/80 backdrop-blur-md rounded-2xl p-6 border border-border/30 shadow-xl">
+                <Lock className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+                <p className="font-semibold text-foreground mb-1">
+                  Deblochează toate cele {recs.length} recomandări
+                </p>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Upgrade la Pro pentru acces complet
+                </p>
+                <Button size="sm" asChild className="glow-primary">
+                  <Link to="/pricing">
+                    <Crown className="h-3 w-3 mr-1" />
+                    Upgrade la Pro
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
@@ -417,6 +474,15 @@ export default function DashboardOverview() {
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30d');
   const [completedTodos, setCompletedTodos] = useState<Set<number>>(new Set());
+
+  const isFree = !profile?.subscription_tier || profile?.subscription_tier === 'free';
+
+  // Helper to extract recs from audit data
+  const extractRecs = (auditData: any): Recommendation[] => {
+    if (!auditData) return [];
+    const rawRecs = auditData.recommendations;
+    return Array.isArray(rawRecs) ? rawRecs : Array.isArray(rawRecs?.items) ? rawRecs.items : [];
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -443,14 +509,40 @@ export default function DashboardOverview() {
       setConnectedPlatforms(platformsRes.data || []);
       const auditData = ytAuditRes.data?.[0] || null;
       setYtAudit(auditData);
-      const rawRecs = auditData?.recommendations;
-      const recsArray = Array.isArray(rawRecs) ? rawRecs : Array.isArray(rawRecs?.items) ? rawRecs.items : [];
-      setPersonalRecs(recsArray);
+      setPersonalRecs(extractRecs(auditData));
       setRecsLoading(false);
       setLoading(false);
     };
     loadData();
   }, [user, period]);
+
+  // Realtime subscription for youtube_audit
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('youtube-audit-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'youtube_audit',
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          if (payload.new && typeof payload.new === 'object') {
+            const newAudit = payload.new as any;
+            setYtAudit(newAudit);
+            setPersonalRecs(extractRecs(newAudit));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   const chartData = useMemo(() => {
     const byDate: Record<string, any> = {};
@@ -744,10 +836,10 @@ export default function DashboardOverview() {
       </div>
 
       {/* YouTube Audit */}
-      <YouTubeAuditCard audit={ytAudit} />
+      <YouTubeAuditCard audit={ytAudit} isFree={isFree} />
 
       {/* Recomandări Personalizate */}
-      <PersonalizedRecommendationsCard recs={personalRecs} loading={recsLoading} />
+      <PersonalizedRecommendationsCard recs={personalRecs} loading={recsLoading} isFree={isFree} />
 
       {/* Followers Chart */}
       <div className="glass-card p-4 sm:p-6 relative z-10">

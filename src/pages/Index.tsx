@@ -1,5 +1,9 @@
 import Navbar from '@/components/landing/Navbar';
 import HeroSection from '@/components/landing/HeroSection';
+import DailyAuditSection from '@/components/landing/DailyAuditSection';
+import AIRecommendationsSection from '@/components/landing/AIRecommendationsSection';
+import MultiPlatformSection from '@/components/landing/MultiPlatformSection';
+import PricingTableSection from '@/components/landing/PricingTableSection';
 import ProblemSection from '@/components/landing/ProblemSection';
 import HowItWorksSection from '@/components/landing/HowItWorksSection';
 import FeaturesSection from '@/components/landing/FeaturesSection';
@@ -13,6 +17,10 @@ export default function Index() {
     <div className="min-h-screen bg-background dark">
       <Navbar />
       <HeroSection />
+      <DailyAuditSection />
+      <AIRecommendationsSection />
+      <MultiPlatformSection />
+      <PricingTableSection />
       <ProblemSection />
       <HowItWorksSection />
       <FeaturesSection />
