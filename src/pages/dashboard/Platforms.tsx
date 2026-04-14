@@ -77,10 +77,7 @@ export default function Platforms() {
       user_id: user!.id, platform: platform.key, platform_url: url, is_active: true,
     }, { onConflict: 'user_id,platform' });
     if (error) {
-      const { error: insertError } = await supabase.from('artist_platforms').insert({
-        user_id: user!.id, platform: platform.key, platform_url: url, is_active: true,
-      });
-      if (insertError) { toast({ title: 'Eroare la conectare', description: insertError.message, variant: 'destructive' }); setSaving(null); return; }
+      toast({ title: 'Eroare la conectare', description: error.message, variant: 'destructive' }); setSaving(null); return;
     }
     setConnected(prev => [...prev.filter(c => c.platform !== platform.key), { id: '', platform: platform.key, url, is_active: true }]);
     toast({ title: `${platform.name} conectat cu succes!` });

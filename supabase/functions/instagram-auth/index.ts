@@ -139,23 +139,9 @@ Deno.serve(async (req) => {
       is_active: true,
     };
 
-    const { data: existingConnection, error: selectError } = await supabase
+    const { error: writeError } = await supabase
       .from("artist_platforms")
-      .select("id")
-      .eq("user_id", user_id)
-      .eq("platform", "instagram")
-      .maybeSingle();
-
-    if (selectError) {
-      console.error("Failed to check existing Instagram connection", selectError);
-      return jsonResponse({ error: "Failed to load existing platform connection" }, 500);
-    }
-
-    const writeOperation = existingConnection?.id
-      ? supabase.from("artist_platforms").update(payload).eq("id", existingConnection.id)
-      : supabase.from("artist_platforms").insert(payload);
-
-    const { error: writeError } = await writeOperation;
+      .upsert(payload, { onConflict: "user_id,platform" });
 
     if (writeError) {
       console.error("Failed to save Instagram connection", writeError);
