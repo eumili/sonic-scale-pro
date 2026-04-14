@@ -412,6 +412,8 @@ export default function DashboardOverview() {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [connectedPlatforms, setConnectedPlatforms] = useState<any[]>([]);
   const [ytAudit, setYtAudit] = useState<any>(null);
+  const [personalRecs, setPersonalRecs] = useState<Recommendation[]>([]);
+  const [recsLoading, setRecsLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30d');
   const [completedTodos, setCompletedTodos] = useState<Set<number>>(new Set());
