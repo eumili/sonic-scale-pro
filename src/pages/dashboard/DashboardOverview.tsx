@@ -744,6 +744,9 @@ export default function DashboardOverview() {
       {/* YouTube Audit */}
       <YouTubeAuditCard audit={ytAudit} />
 
+      {/* Recomandări Personalizate */}
+      <PersonalizedRecommendationsCard recs={personalRecs} loading={recsLoading} />
+
       {/* Followers Chart */}
       <div className="glass-card p-4 sm:p-6 relative z-10">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mb-4">
