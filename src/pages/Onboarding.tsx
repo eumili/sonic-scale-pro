@@ -71,11 +71,11 @@ export default function Onboarding() {
       .map(([platform, url]) => ({
         user_id: user.id,
         platform,
-        url: url.trim(),
+        platform_url: url.trim(),
         is_active: true,
       }));
     if (rows.length > 0) {
-      await supabase.from('artist_platforms').insert(rows);
+      await supabase.from('artist_platforms').upsert(rows, { onConflict: 'user_id,platform' });
     }
   };
 
