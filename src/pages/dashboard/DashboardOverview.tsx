@@ -443,7 +443,9 @@ export default function DashboardOverview() {
       setConnectedPlatforms(platformsRes.data || []);
       const auditData = ytAuditRes.data?.[0] || null;
       setYtAudit(auditData);
-      setPersonalRecs(Array.isArray(auditData?.recommendations) ? auditData.recommendations : []);
+      const rawRecs = auditData?.recommendations;
+      const recsArray = Array.isArray(rawRecs) ? rawRecs : Array.isArray(rawRecs?.items) ? rawRecs.items : [];
+      setPersonalRecs(recsArray);
       setRecsLoading(false);
       setLoading(false);
     };
