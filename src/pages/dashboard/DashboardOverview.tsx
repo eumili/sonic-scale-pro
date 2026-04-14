@@ -2,7 +2,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Check, Music, Loader2, MoreHorizontal, Lock, ArrowUp, AlertTriangle, Star } from 'lucide-react';
+import { Check, Music, Loader2, MoreHorizontal, Lock, ArrowUp, AlertTriangle, Star, Zap, Info, PartyPopper } from 'lucide-react';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
@@ -262,6 +264,145 @@ function YouTubeAuditCard({ audit }: { audit: any | null }) {
     </div>
   );
 }
+/* ── Personalized Recommendations Card ── */
+interface Recommendation {
+  indicator: string;
+  status: 'red' | 'yellow';
+  category: string;
+  priority: number;
+  issue: string;
+  action: string;
+  impact: string;
+  effort: string;
+}
+
+function PersonalizedRecommendationsCard({ recs, loading: isLoading }: { recs: Recommendation[]; loading: boolean }) {
+  const [tab, setTab] = useState<'all' | 'red' | 'yellow'>('all');
+
+  if (isLoading) {
+    return (
+      <div className="glass-card p-4 sm:p-6 relative z-10 space-y-4">
+        <Skeleton className="h-6 w-56" />
+        <Skeleton className="h-8 w-72" />
+        <div className="space-y-3">
+          {[1, 2, 3].map(i => <Skeleton key={i} className="h-14 w-full" />)}
+        </div>
+      </div>
+    );
+  }
+
+  if (!recs || recs.length === 0) {
+    return (
+      <div className="glass-card p-4 sm:p-6 relative z-10">
+        <div className="flex items-center gap-3 mb-4">
+          <h2 className="text-sm sm:text-base font-semibold text-foreground">Recomandări Personalizate</h2>
+        </div>
+        <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+          <PartyPopper className="h-10 w-10 mb-3 opacity-40" />
+          <p className="text-sm">Nu ai recomandări active — super treabă!</p>
+        </div>
+      </div>
+    );
+  }
+
+  const sorted = [...recs].sort((a, b) => a.priority - b.priority);
+  const filtered = tab === 'all' ? sorted : sorted.filter(r => r.status === tab);
+  const redCount = recs.filter(r => r.status === 'red').length;
+  const yellowCount = recs.filter(r => r.status === 'yellow').length;
+
+  const tabs: { key: 'all' | 'red' | 'yellow'; label: string; count: number }[] = [
+    { key: 'all', label: 'Toate', count: recs.length },
+    { key: 'red', label: 'Urgente', count: redCount },
+    { key: 'yellow', label: 'Atenție', count: yellowCount },
+  ];
+
+  const effortBadge = (effort: string) => {
+    const lower = effort?.toLowerCase() || '';
+    const color = lower.includes('mic') ? 'bg-success/20 text-success' : 'bg-yellow-500/20 text-yellow-400';
+    return <span className={`text-[10px] sm:text-xs px-2 py-0.5 rounded-full font-medium ${color}`}>{effort}</span>;
+  };
+
+  return (
+    <div className="glass-card p-4 sm:p-6 relative z-10">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3">
+          <h2 className="text-sm sm:text-base font-semibold text-foreground">Recomandări Personalizate</h2>
+          <Badge className="text-[10px] sm:text-xs bg-primary/20 text-primary border-primary/30 hover:bg-primary/20">{recs.length}</Badge>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-2 mb-4 overflow-x-auto">
+        {tabs.map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors whitespace-nowrap ${
+              tab === t.key
+                ? 'bg-primary/20 text-primary'
+                : 'bg-muted/20 text-muted-foreground hover:bg-muted/40'
+            }`}
+          >
+            {t.label}
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${tab === t.key ? 'bg-primary/30' : 'bg-muted/30'}`}>
+              {t.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* Accordion */}
+      {filtered.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-6">Nicio recomandare în această categorie.</p>
+      ) : (
+        <Accordion type="single" collapsible className="space-y-2">
+          {filtered.map((rec, idx) => {
+            const isRed = rec.status === 'red';
+            const statusColor = isRed ? 'bg-[#ef4444]/20 text-[#ef4444]' : 'bg-[#eab308]/20 text-[#eab308]';
+            const statusLabel = isRed ? 'URGENT' : 'ATENȚIE';
+            const StatusIcon = isRed ? Zap : Info;
+            const truncatedIssue = rec.issue.length > 80 ? rec.issue.slice(0, 80) + '…' : rec.issue;
+
+            return (
+              <AccordionItem key={idx} value={`rec-${idx}`} className="border border-border/30 rounded-xl overflow-hidden bg-muted/10">
+                <AccordionTrigger className="px-3 sm:px-4 py-3 hover:no-underline hover:bg-muted/20 [&[data-state=open]>svg]:rotate-180">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 text-left">
+                    <StatusIcon className="h-4 w-4 shrink-0" style={{ color: isRed ? '#ef4444' : '#eab308' }} />
+                    <span className={`text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${statusColor}`}>
+                      {statusLabel}
+                    </span>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground shrink-0">{rec.category}</span>
+                    <span className="text-xs sm:text-sm text-foreground truncate">{truncatedIssue}</span>
+                    <span className="text-[10px] sm:text-xs text-muted-foreground shrink-0 ml-auto hidden sm:inline">
+                      Prioritate #{rec.priority}
+                    </span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-3 sm:px-4 pb-4 pt-1">
+                  <div className="space-y-3 pl-6 sm:pl-9">
+                    <div>
+                      <p className="text-[10px] sm:text-xs font-semibold text-primary uppercase tracking-wider mb-1">Ce de făcut:</p>
+                      <p className="text-xs sm:text-sm text-foreground/90">{rec.action}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] sm:text-xs font-semibold text-primary uppercase tracking-wider mb-1">Impact așteptat:</p>
+                      <p className="text-xs sm:text-sm text-foreground/90">{rec.impact}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-[10px] sm:text-xs font-semibold text-primary uppercase tracking-wider">Efort:</p>
+                      {effortBadge(rec.effort)}
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
+      )}
+    </div>
+  );
+}
 
 export default function DashboardOverview() {
   const { user } = useAuth();
@@ -271,6 +412,8 @@ export default function DashboardOverview() {
   const [recommendations, setRecommendations] = useState<any[]>([]);
   const [connectedPlatforms, setConnectedPlatforms] = useState<any[]>([]);
   const [ytAudit, setYtAudit] = useState<any>(null);
+  const [personalRecs, setPersonalRecs] = useState<Recommendation[]>([]);
+  const [recsLoading, setRecsLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('30d');
   const [completedTodos, setCompletedTodos] = useState<Set<number>>(new Set());
@@ -298,7 +441,10 @@ export default function DashboardOverview() {
       if (healthRes.data?.[0]) setHealthScore(healthRes.data[0]);
       setRecommendations(recsRes.data || []);
       setConnectedPlatforms(platformsRes.data || []);
-      setYtAudit(ytAuditRes.data?.[0] || null);
+      const auditData = ytAuditRes.data?.[0] || null;
+      setYtAudit(auditData);
+      setPersonalRecs(Array.isArray(auditData?.recommendations) ? auditData.recommendations : []);
+      setRecsLoading(false);
       setLoading(false);
     };
     loadData();
@@ -597,6 +743,9 @@ export default function DashboardOverview() {
 
       {/* YouTube Audit */}
       <YouTubeAuditCard audit={ytAudit} />
+
+      {/* Recomandări Personalizate */}
+      <PersonalizedRecommendationsCard recs={personalRecs} loading={recsLoading} />
 
       {/* Followers Chart */}
       <div className="glass-card p-4 sm:p-6 relative z-10">
