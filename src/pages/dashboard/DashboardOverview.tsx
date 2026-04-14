@@ -441,7 +441,10 @@ export default function DashboardOverview() {
       if (healthRes.data?.[0]) setHealthScore(healthRes.data[0]);
       setRecommendations(recsRes.data || []);
       setConnectedPlatforms(platformsRes.data || []);
-      setYtAudit(ytAuditRes.data?.[0] || null);
+      const auditData = ytAuditRes.data?.[0] || null;
+      setYtAudit(auditData);
+      setPersonalRecs(Array.isArray(auditData?.recommendations) ? auditData.recommendations : []);
+      setRecsLoading(false);
       setLoading(false);
     };
     loadData();
