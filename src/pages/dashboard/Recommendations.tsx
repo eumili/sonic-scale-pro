@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePlan } from '@/hooks/usePlan';
 import { supabase } from '@/lib/supabase';
-import { Loader2, ArrowRight, Sparkles } from 'lucide-react';
+import { Loader2, ArrowRight, Sparkles, Lock, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 
@@ -22,26 +23,28 @@ const PLATFORM_COLORS: Record<string, string> = {
   apple_music: 'bg-pink-500/10 text-pink-300', general: 'bg-primary/10 text-primary',
 };
 
+// Number of full-detail recommendations a Free user can see. The rest are blurred
+// with an upgrade paywall on top. Landing page promises "1 recomandare teaser vizibilă".
+const FREE_VISIBLE_COUNT = 1;
+
 export default function Recommendations() {
   const { user } = useAuth();
+  const { isFree, isLoading: planLoading } = usePlan();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [metrics, setMetrics] = useState<any[]>([]);
   const [healthScore, setHealthScore] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [userPlan, setUserPlan] = useState('free');
 
   useEffect(() => {
     if (!user) return;
     const loadData = async () => {
       setLoading(true);
       const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const [profileRes, recsRes, metricsRes, healthRes] = await Promise.all([
-        supabase.from('profiles').select('plan').eq('id', user.id).single(),
+      const [recsRes, metricsRes, healthRes] = await Promise.all([
         supabase.from('daily_recommendations').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20),
         supabase.from('metrics_daily').select('*').eq('user_id', user.id).gte('metric_date', sevenDaysAgo.toISOString().split('T')[0]).order('metric_date', { ascending: false }),
         supabase.from('artist_health_scores').select('*').eq('user_id', user.id).order('score_date', { ascending: false }).limit(1),
       ]);
-      if (profileRes.data?.plan) setUserPlan(profileRes.data.plan);
       setRecommendations(recsRes.data || []);
       setMetrics(metricsRes.data || []);
       if (healthRes.data?.[0]) setHealthScore(healthRes.data[0]);
@@ -68,7 +71,9 @@ export default function Recommendations() {
     return generated;
   }, [recommendations, metrics, healthScore]);
 
-  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (loading || planLoading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+  const blockedCount = isFree ? Math.max(0, displayRecs.length - FREE_VISIBLE_COUNT) : 0;
 
   return (
     <div className="animate-fade-in space-y-4 sm:space-y-6 sparkle-container warm-gradient-top">
@@ -99,30 +104,57 @@ export default function Recommendations() {
         })}
       </div>
 
-      {/* Recommendation cards */}
+      {/* Recommendation cards — Free sees first N fully, rest blurred with paywall */}
       <div className="space-y-3 sm:space-y-4 relative z-10">
         {displayRecs.map((rec, idx) => {
           const priorityConfig = PRIORITY_CONFIG[rec.priority] || PRIORITY_CONFIG.low;
           const platformColor = PLATFORM_COLORS[rec.platform] || PLATFORM_COLORS.general;
+          const isBlocked = isFree && idx >= FREE_VISIBLE_COUNT;
           return (
-            <div key={rec.id || idx} className={`glass-card p-3 sm:p-5 border-l-4 ${priorityConfig.borderColor} hover:border-primary/30 transition-colors backdrop-blur-lg`}>
-              <div className="flex items-start gap-2.5 sm:gap-4">
-                <div className={`h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full ${priorityConfig.dotColor} mt-1.5 shrink-0`} />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2 flex-wrap">
-                    <span className={`px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-medium ${platformColor}`}>{rec.platform === 'general' ? 'Strategie' : rec.platform.charAt(0).toUpperCase() + rec.platform.slice(1)}</span>
-                    {rec.category && <span className="px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-xs bg-muted text-muted-foreground">{rec.category}</span>}
+            <div key={rec.id || idx} className="relative">
+              <div
+                className={`glass-card p-3 sm:p-5 border-l-4 ${priorityConfig.borderColor} transition-colors backdrop-blur-lg ${
+                  isBlocked ? 'blur-sm select-none pointer-events-none' : 'hover:border-primary/30'
+                }`}
+                aria-hidden={isBlocked}
+              >
+                <div className="flex items-start gap-2.5 sm:gap-4">
+                  <div className={`h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full ${priorityConfig.dotColor} mt-1.5 shrink-0`} />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 sm:gap-2 mb-1.5 sm:mb-2 flex-wrap">
+                      <span className={`px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-xs font-medium ${platformColor}`}>{rec.platform === 'general' ? 'Strategie' : rec.platform.charAt(0).toUpperCase() + rec.platform.slice(1)}</span>
+                      {rec.category && <span className="px-1.5 sm:px-2 py-0.5 rounded-md text-[10px] sm:text-xs bg-muted text-muted-foreground">{rec.category}</span>}
+                    </div>
+                    <h3 className="text-sm sm:text-base font-semibold text-foreground mb-0.5 sm:mb-1">{rec.recommendation}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{rec.reasoning}</p>
                   </div>
-                  <h3 className="text-sm sm:text-base font-semibold text-foreground mb-0.5 sm:mb-1">{rec.recommendation}</h3>
-                  <p className="text-xs sm:text-sm text-muted-foreground">{rec.reasoning}</p>
                 </div>
               </div>
             </div>
           );
         })}
+
+        {/* Single upgrade CTA at the end, summarising how many are locked. */}
+        {isFree && blockedCount > 0 && (
+          <div className="glass-card p-4 sm:p-6 border border-primary/20 bg-gradient-to-r from-primary/10 to-primary/5 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 text-center sm:text-left">
+            <Lock className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
+            <div className="flex-1">
+              <h3 className="text-sm sm:text-base font-semibold text-foreground">
+                Încă {blockedCount} recomandăr{blockedCount === 1 ? 'e' : 'i'} detaliat{blockedCount === 1 ? 'ă' : 'e'} blocat{blockedCount === 1 ? 'ă' : 'e'}
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground">Upgrade la Pro (49 lei/lună) pentru toate recomandările personalizate.</p>
+            </div>
+            <Button asChild size="sm" className="w-full sm:w-auto glow-primary">
+              <Link to="/pricing">
+                <Crown className="h-3.5 w-3.5 mr-1.5" />
+                Upgrade la Pro
+              </Link>
+            </Button>
+          </div>
+        )}
       </div>
 
-      {['pro', 'agency'].includes(userPlan) && (
+      {!isFree && (
         <div className="glass-card p-4 sm:p-6 bg-gradient-to-r from-primary/10 to-primary/5 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 relative z-10">
           <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
           <div className="flex-1 text-center sm:text-left">

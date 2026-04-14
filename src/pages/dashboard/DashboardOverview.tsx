@@ -246,44 +246,42 @@ function YouTubeAuditCard({ audit, isFree }: { audit: any | null; isFree: boolea
         </div>
       </div>
 
-      {/* Category dots */}
-      <div className="relative">
-        <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 ${isFree ? 'select-none' : ''}`}>
-          {AUDIT_CATEGORIES.map(cat => (
-            <div key={cat.label} className="bg-muted/20 rounded-xl p-3 border border-border/30">
-              <h4 className="text-xs font-semibold text-foreground mb-2">{cat.label}</h4>
-              <div className="space-y-1.5">
-                {cat.fields.map(f => {
-                  const val: string = audit[f.key] || 'red';
-                  return (
-                    <div key={f.key} className="flex items-center gap-2">
-                      <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${DOT_COLORS[val] || 'bg-muted-foreground/30'}`} />
-                      <span className="text-[10px] sm:text-xs text-muted-foreground">{f.label}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Free tier overlay on detail area */}
-        {isFree && (
-          <div className="absolute inset-0 flex items-center justify-center bg-card/70 backdrop-blur-sm rounded-xl">
-            <div className="text-center">
-              <Lock className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-              <p className="font-semibold text-foreground mb-1 text-sm">Detalii complete pe Pro</p>
-              <p className="text-xs text-muted-foreground mb-3">Upgrade pentru valori exacte și detalii indicatori</p>
-              <Button size="sm" asChild className="glow-primary">
-                <Link to="/pricing">
-                  <Crown className="h-3 w-3 mr-1" />
-                  Upgrade
-                </Link>
-              </Button>
+      {/* Category dots — visible to Free as promised on landing ("lista indicatori cu status colorat").
+          Numeric values stay hidden for Free via the progressBar() helper above; only the
+          colored status dots + labels are shown here. */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        {AUDIT_CATEGORIES.map(cat => (
+          <div key={cat.label} className="bg-muted/20 rounded-xl p-3 border border-border/30">
+            <h4 className="text-xs font-semibold text-foreground mb-2">{cat.label}</h4>
+            <div className="space-y-1.5">
+              {cat.fields.map(f => {
+                const val: string = audit[f.key] || 'red';
+                return (
+                  <div key={f.key} className="flex items-center gap-2">
+                    <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${DOT_COLORS[val] || 'bg-muted-foreground/30'}`} />
+                    <span className="text-[10px] sm:text-xs text-muted-foreground">{f.label}</span>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        )}
+        ))}
       </div>
+
+      {isFree && (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-border/40 bg-muted/10 p-3">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Lock className="h-3.5 w-3.5 shrink-0" />
+            <span>Vezi valorile exacte (%) per categorie pe planul Pro.</span>
+          </div>
+          <Button size="sm" asChild className="glow-primary shrink-0">
+            <Link to="/pricing">
+              <Crown className="h-3 w-3 mr-1" />
+              Upgrade
+            </Link>
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -475,7 +473,10 @@ export default function DashboardOverview() {
   const [period, setPeriod] = useState('30d');
   const [completedTodos, setCompletedTodos] = useState<Set<number>>(new Set());
 
-  const isFree = !profile?.subscription_tier || profile?.subscription_tier === 'free';
+  // Read plan from the canonical `profiles.plan` column via the central hook.
+  // Using `profile?.subscription_tier` here was a bug: that column does not exist in the DB,
+  // so the expression was always undefined → isFree was always true, even for paying users.
+  const isFree = !profile?.plan || profile?.plan === 'free' || profile?.plan === 'starter';
 
   // Helper to extract recs from audit data
   const extractRecs = (auditData: any): Recommendation[] => {

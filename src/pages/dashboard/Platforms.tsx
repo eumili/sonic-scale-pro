@@ -1,11 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePlan } from '@/hooks/usePlan';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
-import { Music, Youtube, Instagram, Music2, Headphones, Link2, Unlink, ExternalLink, CheckCircle2, Loader2, RefreshCw, Users, BarChart3, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Music, Youtube, Instagram, Music2, Headphones, Link2, Unlink, ExternalLink, CheckCircle2, Loader2, RefreshCw, Users, BarChart3, Clock, Lock, Crown } from 'lucide-react';
+
+// YouTube is the only platform available on the Free plan (used for the daily audit).
+// Spotify, Instagram, TikTok, Apple Music require Pro — landing promises
+// "Multi-platformă (Spotify, Instagram)" as a Pro-only feature.
+const FREE_PLATFORMS = new Set(['youtube']);
 
 interface PlatformConfig {
   key: string; name: string; icon: React.ReactNode; color: string; bgColor: string; oauth: boolean; placeholder: string;
@@ -33,6 +40,7 @@ function getTimeSince(dateStr: string): string {
 
 export default function Platforms() {
   const { user } = useAuth();
+  const { isFree, isLoading: planLoading } = usePlan();
   const [connected, setConnected] = useState<ConnectedPlatform[]>([]);
   const [loading, setLoading] = useState(true);
   const [urls, setUrls] = useState<Record<string, string>>({});
@@ -66,6 +74,16 @@ export default function Platforms() {
   };
 
   const handleConnect = async (platform: PlatformConfig) => {
+    // Server-side RLS should also enforce this, but fail fast in the UI to avoid a
+    // Free user starting an OAuth flow and then being blocked at the end.
+    if (isFree && !FREE_PLATFORMS.has(platform.key)) {
+      toast({
+        title: `${platform.name} este disponibil pe Pro`,
+        description: 'Upgrade pentru a conecta mai multe platforme.',
+        variant: 'destructive',
+      });
+      return;
+    }
     if (platform.key === 'instagram') {
       handleInstagramOAuth();
       return;
@@ -126,7 +144,7 @@ export default function Platforms() {
     return n.toLocaleString();
   };
 
-  if (loading) {
+  if (loading || planLoading) {
     return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
@@ -141,8 +159,9 @@ export default function Platforms() {
         {platforms.map(platform => {
           const conn = isConnected(platform.key);
           const metric = latestMetrics[platform.key];
+          const locked = isFree && !FREE_PLATFORMS.has(platform.key) && !conn;
           return (
-            <div key={platform.key} className="glass-card p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 backdrop-blur-lg">
+            <div key={platform.key} className={`glass-card p-4 sm:p-5 flex flex-col gap-3 sm:gap-4 backdrop-blur-lg ${locked ? 'opacity-80' : ''}`}>
               {/* Header row */}
               <div className="flex items-start gap-3">
                 <div className={`h-10 w-10 sm:h-12 sm:w-12 rounded-xl ${platform.bgColor} flex items-center justify-center shrink-0`} style={{ color: platform.color }}>
@@ -165,6 +184,8 @@ export default function Platforms() {
                         ? `@${conn.url.split('instagram.com/')[1]}`
                         : conn.url}
                     </p>
+                  ) : locked ? (
+                    <p className="text-xs text-muted-foreground mt-0.5">Disponibil pe planul Pro (49 lei/lună).</p>
                   ) : platform.key === 'instagram' ? (
                     <p className="text-xs text-muted-foreground mt-0.5">Conectează prin Facebook OAuth</p>
                   ) : (
@@ -196,6 +217,14 @@ export default function Platforms() {
                   <Button variant="outline" size="sm" onClick={() => handleDisconnect(platform.key)} disabled={saving === platform.key} className="h-8 text-xs flex-1 sm:flex-none">
                     {saving === platform.key ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Unlink className="h-3.5 w-3.5 mr-1" />}
                     Deconectează
+                  </Button>
+                ) : locked ? (
+                  <Button asChild size="sm" className="h-8 text-xs w-full sm:w-auto glow-primary">
+                    <Link to="/pricing">
+                      <Lock className="h-3.5 w-3.5 mr-1" />
+                      Disponibil pe Pro
+                      <Crown className="h-3.5 w-3.5 ml-1" />
+                    </Link>
                   </Button>
                 ) : (
                   <Button size="sm" onClick={() => handleConnect(platform)} disabled={saving === platform.key} className="h-8 text-xs w-full sm:w-auto">
