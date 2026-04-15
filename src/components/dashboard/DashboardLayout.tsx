@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { useState, useEffect } from 'react';
 import {
-  LayoutDashboard, Globe, BarChart3, Lightbulb, MessageSquare, Settings, Music2,
+  LayoutDashboard, Globe, BarChart3, Lightbulb, Settings, Music2,
   Bell, LogOut, CreditCard, ChevronDown, ShieldCheck, Search, Menu, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,9 @@ const navItems = [
   { to: '/dashboard/platforms', label: 'Platforme', icon: Globe },
   { to: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
   { to: '/dashboard/recommendations', label: 'Recomandări', icon: Lightbulb },
-  { to: '/dashboard/ai-chat', label: 'AI Chat', icon: MessageSquare },
+  // AI Chat ascuns din navigare publică pe perioada în care nu vrem să fie expus.
+  // Ruta + pagina + edge function rămân (URL direct funcționează), dar nu îl
+  // afișăm utilizatorilor obișnuiți.
   { to: '/dashboard/settings', label: 'Setări', icon: Settings },
 ];
 

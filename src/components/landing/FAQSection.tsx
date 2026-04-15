@@ -4,11 +4,10 @@ const faqs = [
   { q: 'Ce este ArtistPulse?', a: 'ArtistPulse este primul dashboard care îți oferă un audit complet al prezenței tale digitale pe toate platformele de muzică, actualizat zilnic.' },
   { q: 'Cum se calculează Artist Health Score?', a: 'Scorul combină 5 dimensiuni: Consistență, Creștere, Engagement, Reach și Momentum. Fiecare e analizată pe baza datelor reale de pe platformele tale.' },
   { q: 'Ce platforme sunt suportate?', a: 'YouTube, Spotify, Instagram, TikTok și SoundCloud. Adăugăm constant platforme noi.' },
-  { q: 'Este gratuit?', a: 'Da! Planul Free îți oferă acces la Health Score, un audit de bază și recomandări zilnice. Planurile Pro și Growth deblochează analytics avansat și AI Chat.' },
+  { q: 'Este gratuit?', a: 'Da! Planul Free îți oferă acces la Health Score, un audit de bază și recomandări zilnice. Planurile Pro și Agency deblochează analytics avansat, multi-platformă și recomandări detaliate.' },
   { q: 'Cât durează configurarea?', a: 'Sub 2 minute. Conectezi platformele, aștepți auditul și ești gata.' },
   { q: 'Datele mele sunt în siguranță?', a: 'Absolut. Folosim criptare end-to-end și nu partajăm datele tale cu nimeni.' },
   { q: 'Pot anula oricând?', a: 'Da, poți anula subscripția în orice moment din setări. Fără întrebări.' },
-  { q: 'Cum funcționează AI Chat?', a: 'AI Chat-ul cunoaște toate datele tale și poate răspunde la întrebări specifice despre performanță, tendințe și recomandări.' },
 ];
 
 export default function FAQSection() {
