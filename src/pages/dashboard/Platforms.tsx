@@ -112,8 +112,11 @@ export default function Platforms() {
       toast({ title: 'Eroare la conectare', description: error.message, variant: 'destructive' }); setSaving(null); return;
     }
     setConnected(prev => [...prev.filter(c => c.platform !== platform.key), { id: '', platform: platform.key, url, is_active: true }]);
-    toast({ title: `${platform.name} conectat cu succes!` });
+    toast({ title: `${platform.name} conectat!`, description: 'Importăm datele acum...' });
     setSaving(null);
+    // Auto-sync immediately so the user sees real data without clicking Sync.
+    // This is a conversion-critical UX step: an empty dashboard kills Pro upgrades.
+    handleSync(platform.key);
   };
 
   const handleDisconnect = async (platformKey: string) => {
