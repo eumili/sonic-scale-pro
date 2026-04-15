@@ -70,8 +70,21 @@ export default function Platforms() {
   const isConnected = (key: string) => connected.find(c => c.platform === key && c.is_active);
 
   const handleInstagramOAuth = () => {
+    // Generate a cryptographically-random state token, persist it in
+    // sessionStorage, and pass it to Facebook. On the callback page we
+    // compare what comes back in ?state= against what we stored — a
+    // mismatch means the redirect was forged (CSRF) and we refuse to
+    // exchange the code. Without this check, an attacker could trick
+    // an authenticated victim into binding the attacker's Instagram
+    // account to the victim's ArtistPulse profile.
+    const stateBytes = new Uint8Array(32);
+    window.crypto.getRandomValues(stateBytes);
+    const state = btoa(String.fromCharCode(...stateBytes))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    sessionStorage.setItem('ig_oauth_state', state);
+
     const redirectUri = `${window.location.origin}/auth/instagram/callback`;
-    window.location.href = `https://www.facebook.com/v21.0/dialog/oauth?client_id=819536013926165&redirect_uri=${encodeURIComponent(redirectUri)}&scope=instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement&response_type=code`;
+    window.location.href = `https://www.facebook.com/v21.0/dialog/oauth?client_id=819536013926165&redirect_uri=${encodeURIComponent(redirectUri)}&scope=instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement&response_type=code&state=${encodeURIComponent(state)}`;
   };
 
   const handleConnect = async (platform: PlatformConfig) => {
