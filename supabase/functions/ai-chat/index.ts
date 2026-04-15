@@ -39,6 +39,39 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "upgrade_required" }), { status: 402, headers: _corsHeaders });
     }
 
+    // Rate limiting: Pro = 50 msg/day, Agency = 200 msg/day. We use the service
+    // role to call increment_ai_chat_usage() which atomically bumps the
+    // per-day counter and returns the new value (or the unchanged value if the
+    // cap is reached). The function refuses to bump past the limit, so a flood
+    // of concurrent requests can't slip through.
+    const dailyLimit = tier === "agency" ? 200 : 50;
+    const adminSupabase = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+    const { data: usageCount, error: usageError } = await adminSupabase.rpc(
+      "increment_ai_chat_usage",
+      { p_user_id: user.id, p_limit: dailyLimit }
+    );
+    if (usageError) {
+      console.error("rate limit check failed:", usageError);
+      return new Response(JSON.stringify({ error: "Rate limit check failed" }), {
+        status: 500,
+        headers: { ..._corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (typeof usageCount === "number" && usageCount >= dailyLimit) {
+      return new Response(
+        JSON.stringify({
+          error: "rate_limit_exceeded",
+          limit: dailyLimit,
+          used: usageCount,
+          message: `Ai atins limita de ${dailyLimit} mesaje pe zi. Revino mâine sau upgradeează planul.`,
+        }),
+        { status: 429, headers: { ..._corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const { messages } = await req.json();
     if (!Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: "messages required" }), { status: 400, headers: _corsHeaders });

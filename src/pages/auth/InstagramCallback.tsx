@@ -17,8 +17,23 @@ export default function InstagramCallback() {
 
   const exchangeCode = async () => {
     const code = searchParams.get('code');
+    const returnedState = searchParams.get('state');
+    // CSRF check: the state we sent to Facebook must match what comes
+    // back in the redirect. We consume the stored value (single-use) so
+    // a stale tab can't replay the same code/state pair after the user
+    // has already finished a real connect flow.
+    const expectedState = sessionStorage.getItem('ig_oauth_state');
+    sessionStorage.removeItem('ig_oauth_state');
     if (!code) {
       setErrorMsg('Lipsește codul de autorizare din URL.');
+      setStatus('error');
+      return;
+    }
+    if (!returnedState || !expectedState || returnedState !== expectedState) {
+      // Refuse to exchange the code. Without state validation an attacker
+      // could pre-build an OAuth callback URL with their own Instagram code
+      // and trick a logged-in victim into binding the wrong account.
+      setErrorMsg('Verificarea de securitate a eșuat (state invalid). Pornește din nou conectarea Instagram.');
       setStatus('error');
       return;
     }
@@ -65,8 +80,16 @@ export default function InstagramCallback() {
   }, [user]);
 
   const handleRetry = () => {
+    // Mint a fresh state for the retry — the previous one was consumed
+    // (and likely invalid, which is why we landed here).
+    const stateBytes = new Uint8Array(32);
+    window.crypto.getRandomValues(stateBytes);
+    const state = btoa(String.fromCharCode(...stateBytes))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    sessionStorage.setItem('ig_oauth_state', state);
+
     const redirectUri = `${window.location.origin}/auth/instagram/callback`;
-    window.location.href = `https://www.facebook.com/v21.0/dialog/oauth?client_id=819536013926165&redirect_uri=${encodeURIComponent(redirectUri)}&scope=instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement&response_type=code`;
+    window.location.href = `https://www.facebook.com/v21.0/dialog/oauth?client_id=819536013926165&redirect_uri=${encodeURIComponent(redirectUri)}&scope=instagram_basic,instagram_manage_insights,pages_show_list,pages_read_engagement&response_type=code&state=${encodeURIComponent(state)}`;
   };
 
   return (

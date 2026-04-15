@@ -57,9 +57,20 @@ Deno.serve(async (req) => {
     const appSecret = Deno.env.get("FACEBOOK_APP_SECRET");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    // Symmetric key used by upsert_encrypted_oauth_token() to pgp_sym_encrypt
+    // the Facebook long-lived token before it ever hits disk. Set in
+    // Supabase Edge Function Secrets — never commit it to source.
+    const encryptionKey = Deno.env.get("INSTAGRAM_TOKEN_ENCRYPTION_KEY");
 
     if (!appId || !appSecret || !supabaseUrl || !supabaseKey) {
       return jsonResponse({ error: "Missing required environment configuration" }, 500);
+    }
+    if (!encryptionKey || encryptionKey.length < 16) {
+      // We refuse to proceed without a key — the alternative is silently
+      // falling back to plaintext storage, which is exactly what this
+      // hardening was meant to prevent.
+      console.error("INSTAGRAM_TOKEN_ENCRYPTION_KEY is missing or too short");
+      return jsonResponse({ error: "Token encryption is not configured" }, 500);
     }
 
     const shortTokenUrl = new URL("https://graph.facebook.com/v21.0/oauth/access_token");
@@ -128,23 +139,23 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const payload = {
-      user_id,
-      platform: "instagram",
-      platform_id: instagramAccount.id,
-      platform_username: instagramAccount.username ?? null,
-      oauth_access_token: longLivedToken,
-      oauth_expires_at: oauthExpiresAt,
-      is_oauth_connected: true,
-      is_active: true,
-    };
+    // Encrypt-on-write via the SECURITY DEFINER RPC. The plaintext token
+    // is passed inside the parameter value (over TLS to Postgres) and is
+    // immediately wrapped in pgp_sym_encrypt(), so the cleartext never
+    // touches a column or a server log. The legacy oauth_access_token
+    // column is null'd out by the RPC on every upsert.
+    const { error: rpcError } = await supabase.rpc("upsert_encrypted_oauth_token", {
+      p_user_id: user_id,
+      p_platform: "instagram",
+      p_platform_id: instagramAccount.id,
+      p_platform_username: instagramAccount.username ?? null,
+      p_access_token: longLivedToken,
+      p_expires_at: oauthExpiresAt,
+      p_encryption_key: encryptionKey,
+    });
 
-    const { error: writeError } = await supabase
-      .from("artist_platforms")
-      .upsert(payload, { onConflict: "user_id,platform" });
-
-    if (writeError) {
-      console.error("Failed to save Instagram connection", writeError);
+    if (rpcError) {
+      console.error("Failed to save encrypted Instagram connection", rpcError);
       return jsonResponse({ error: "Failed to save platform connection" }, 500);
     }
 
