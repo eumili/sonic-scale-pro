@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlan } from '@/hooks/usePlan';
 import { supabase } from '@/lib/supabase';
-import { Loader2, ArrowRight, Sparkles, Lock, Crown } from 'lucide-react';
+import { Loader2, Sparkles, Lock, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { planPriceLabel, PLAN_LIMITS } from '@/lib/pricing';
@@ -156,16 +156,8 @@ export default function Recommendations() {
         )}
       </div>
 
-      {!isFree && (
-        <div className="glass-card p-4 sm:p-6 bg-gradient-to-r from-primary/10 to-primary/5 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 relative z-10">
-          <Sparkles className="h-6 w-6 sm:h-8 sm:w-8 text-primary shrink-0" />
-          <div className="flex-1 text-center sm:text-left">
-            <h3 className="text-sm sm:text-base font-semibold text-foreground">Vrei sfaturi mai detaliate?</h3>
-            <p className="text-xs sm:text-sm text-muted-foreground">Întreabă AI-ul nostru despre strategii personalizate.</p>
-          </div>
-          <Button asChild size="sm" className="w-full sm:w-auto"><Link to="/dashboard/ai-chat">AI Chat <ArrowRight className="ml-2 h-3.5 w-3.5" /></Link></Button>
-        </div>
-      )}
+      {/* CTA "AI Chat" eliminat din UI publică: feature-ul este temporar
+          ascuns pentru utilizatori. Codul rutei și paginii rămân. */}
     </div>
   );
 }

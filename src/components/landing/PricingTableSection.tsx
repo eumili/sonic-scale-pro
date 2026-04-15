@@ -14,7 +14,6 @@ const features = [
   { name: 'Valori exacte per indicator', free: false, pro: true },
   { name: 'TOATE recomandările detaliate', free: false, pro: true },
   { name: 'Multi-platformă (Spotify, Instagram, TikTok, Apple Music)', free: false, pro: true },
-  { name: 'AI Chat (50 mesaje/zi)', free: false, pro: true },
   { name: 'Analytics detaliat 90 zile', free: false, pro: true },
   { name: 'Email zilnic personalizat', free: false, pro: true },
 ];

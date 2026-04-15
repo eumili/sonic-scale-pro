@@ -5,7 +5,7 @@ const footerLinks = {
   Produs: [
     { label: 'Funcționalități', to: '/#features' },
     { label: 'Prețuri', to: '/pricing' },
-    { label: 'AI Chat', to: '/auth/register' },
+    { label: 'Începe gratuit', to: '/auth/register' },
   ],
   Companie: [
     { label: 'Despre noi', to: '/' },

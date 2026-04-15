@@ -1,12 +1,14 @@
-import { Activity, Globe, Mail, Users, Bell, MessageSquare } from 'lucide-react';
+import { Activity, Globe, Mail, Users, Bell, Sparkles } from 'lucide-react';
 
+// "AI Chat contextual" eliminat din public marketing — feature-ul rămâne în
+// cod (route + edge function) dar nu este expus utilizatorilor.
 const features = [
   { icon: Activity, title: 'Artist Health Score', desc: 'Un scor unic 0-100 care măsoară sănătatea prezenței tale digitale.' },
   { icon: Globe, title: 'Audit Multi-Platformă', desc: 'YouTube, Spotify, Instagram, TikTok și SoundCloud — toate analizate împreună.' },
   { icon: Mail, title: 'Email zilnic personalizat', desc: 'Primești un raport scurt cu ce s-a schimbat și ce trebuie să faci.' },
   { icon: Users, title: 'Benchmark vs similari', desc: 'Compară-te cu artiști la un nivel similar și vezi unde ești în urmă.' },
   { icon: Bell, title: 'Alerte algoritm', desc: 'Fii primul care află când se schimbă algoritmii pe platformele tale.' },
-  { icon: MessageSquare, title: 'AI Chat contextual', desc: 'Întreabă orice despre datele tale și primești răspunsuri bazate pe metrici reale.' },
+  { icon: Sparkles, title: 'Recomandări personalizate', desc: 'Acțiuni concrete prioritizate pe baza datelor tale, livrate zilnic.' },
 ];
 
 export default function FeaturesSection() {
