@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { User, Globe, CreditCard, Bell, Loader2, ExternalLink, Upload, FileText, Download, X } from 'lucide-react';
+import { planPriceLabel } from '@/lib/pricing';
 
 const CAREER_STAGES = [
   { value: 'emerging', label: 'Emerging' },
@@ -181,7 +182,7 @@ export default function DashboardSettings() {
               <h3 className="text-sm sm:text-base font-semibold text-foreground">Plan curent</h3>
               <div className="flex items-center gap-2 sm:gap-3">
                 <Badge className="bg-primary/20 text-primary border-primary/30 text-xs sm:text-sm px-2 sm:px-3 py-0.5 sm:py-1">{(profile?.plan || 'free').toUpperCase()}</Badge>
-                <span className="text-muted-foreground text-xs sm:text-sm">{profile?.plan === 'pro' ? '€19/lună' : profile?.plan === 'agency' ? '€49/lună' : 'Gratuit'}</span>
+                <span className="text-muted-foreground text-xs sm:text-sm">{profile?.plan === 'pro' ? planPriceLabel('pro') : profile?.plan === 'agency' ? planPriceLabel('agency') : 'Gratuit'}</span>
               </div>
               <div className="flex gap-2">
                 {profile?.plan === 'free' && <Button asChild size="sm"><Link to="/pricing">Upgrade la Pro</Link></Button>}

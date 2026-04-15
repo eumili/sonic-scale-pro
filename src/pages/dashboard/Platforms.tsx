@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
 import { Link } from 'react-router-dom';
 import { Music, Youtube, Instagram, Music2, Headphones, Link2, Unlink, ExternalLink, CheckCircle2, Loader2, RefreshCw, Users, BarChart3, Clock, Lock, Crown } from 'lucide-react';
+import { planPriceLabel } from '@/lib/pricing';
 
 // YouTube is the only platform available on the Free plan (used for the daily audit).
 // Spotify, Instagram, TikTok, Apple Music require Pro — landing promises
@@ -185,7 +186,7 @@ export default function Platforms() {
                         : conn.url}
                     </p>
                   ) : locked ? (
-                    <p className="text-xs text-muted-foreground mt-0.5">Disponibil pe planul Pro (49 lei/lună).</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">Disponibil pe planul Pro ({planPriceLabel('pro')}).</p>
                   ) : platform.key === 'instagram' ? (
                     <p className="text-xs text-muted-foreground mt-0.5">Conectează prin Facebook OAuth</p>
                   ) : (
