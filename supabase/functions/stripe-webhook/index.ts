@@ -36,7 +36,32 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    console.log(`Processing event: ${event.type}`);
+    // Idempotency guard: Stripe retries failed deliveries, so the same
+    // event.id can arrive multiple times. We record every id in
+    // stripe_events; if the insert collides with an existing row we know
+    // we have already processed (or are currently processing) this event
+    // and we return 200 immediately so Stripe stops retrying.
+    const { error: dedupError } = await supabase
+      .from("stripe_events")
+      .insert({ id: event.id, type: event.type });
+
+    if (dedupError) {
+      // Postgres unique_violation = 23505. Anything else is a real DB
+      // problem and we want Stripe to retry.
+      if (dedupError.code === "23505") {
+        console.log(`Skipping duplicate event ${event.id} (${event.type})`);
+        return new Response(JSON.stringify({ received: true, duplicate: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      console.error("stripe_events insert failed:", dedupError);
+      return new Response(JSON.stringify({ error: "Idempotency check failed" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    console.log(`Processing event: ${event.type} (${event.id})`);
 
     switch (event.type) {
       case "checkout.session.completed": {
