@@ -101,9 +101,9 @@ function getPurchaseEmail(name: string, plan: string, amount: string): { subject
       <li>Suport prioritar dedicat</li>
       ` : `
       <li>Analytics detaliat 90 zile</li>
-      <li>AI Chat nelimitat</li>
+      <li>AI Chat (50 mesaje/zi)</li>
       <li>Alerte algoritm în timp real</li>
-      <li>Export rapoarte PDF</li>
+      <li>5 platforme conectate</li>
       `}
     </ul>
     <div style="text-align:center;margin:24px 0;">

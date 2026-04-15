@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Check, X, ArrowRight, Crown } from 'lucide-react';
+import { planPriceLabel } from '@/lib/pricing';
 
+// IMPORTANT: features listed here must match what's actually implemented and gated.
+// Removed "Istoric audit nelimitat" and "Export rapoarte PDF" because they don't
+// exist yet (audit item #7). Re-add them when shipped.
 const features = [
   { name: 'Scor general + Stars rating', free: true, pro: true },
   { name: 'Lista indicatori cu status colorat', free: true, pro: true },
@@ -9,10 +13,10 @@ const features = [
   { name: '1 recomandare teaser vizibilă', free: true, pro: true },
   { name: 'Valori exacte per indicator', free: false, pro: true },
   { name: 'TOATE recomandările detaliate', free: false, pro: true },
-  { name: 'Istoric audit nelimitat', free: false, pro: true },
-  { name: 'Multi-platformă (Spotify, Instagram)', free: false, pro: true },
-  { name: 'AI Chat nelimitat', free: false, pro: true },
-  { name: 'Export rapoarte PDF', free: false, pro: true },
+  { name: 'Multi-platformă (Spotify, Instagram, TikTok, Apple Music)', free: false, pro: true },
+  { name: 'AI Chat (50 mesaje/zi)', free: false, pro: true },
+  { name: 'Analytics detaliat 90 zile', free: false, pro: true },
+  { name: 'Email zilnic personalizat', free: false, pro: true },
 ];
 
 export default function PricingTableSection() {
@@ -31,8 +35,8 @@ export default function PricingTableSection() {
           <div className="glass-card rounded-2xl p-6 sm:p-8 border border-border/30">
             <h3 className="text-xl font-bold text-foreground mb-1">Free</h3>
             <div className="flex items-baseline gap-1 mb-6">
-              <span className="text-4xl font-bold text-foreground">0</span>
-              <span className="text-muted-foreground">lei / lună</span>
+              <span className="text-4xl font-bold text-foreground">{planPriceLabel('free').replace('/lună', '')}</span>
+              <span className="text-muted-foreground">/ lună</span>
             </div>
             <Button asChild variant="outline" className="w-full mb-8" size="lg">
               <Link to="/auth/register">
@@ -61,8 +65,8 @@ export default function PricingTableSection() {
             </div>
             <h3 className="text-xl font-bold text-foreground mb-1">Pro</h3>
             <div className="flex items-baseline gap-1 mb-6">
-              <span className="text-4xl font-bold text-foreground">49</span>
-              <span className="text-muted-foreground">lei / lună</span>
+              <span className="text-4xl font-bold text-foreground">{planPriceLabel('pro').replace('/lună', '')}</span>
+              <span className="text-muted-foreground">/ lună</span>
             </div>
             <Button asChild className="w-full mb-8 glow-primary" size="lg">
               <Link to="/auth/register">
@@ -78,6 +82,9 @@ export default function PricingTableSection() {
                 </li>
               ))}
             </ul>
+            <p className="text-xs text-muted-foreground/70 mt-4 text-center">
+              Vezi și planul <Link to="/pricing" className="underline hover:text-primary">Agency</Link> pentru echipe.
+            </p>
           </div>
         </div>
       </div>

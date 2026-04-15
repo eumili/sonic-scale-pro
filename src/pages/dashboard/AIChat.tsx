@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Lock, Send, Loader2, Bot, User, Sparkles, ArrowUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import { planPriceLabel } from '@/lib/pricing';
 
 interface Message { role: 'user' | 'assistant'; content: string; }
 
@@ -85,7 +86,7 @@ export default function AIChat() {
         <div className="glass-card p-8 sm:p-12 text-center relative z-10">
           <Lock className="h-8 w-8 sm:h-10 sm:w-10 text-muted-foreground mx-auto mb-3 sm:mb-4" />
           <h2 className="text-base sm:text-lg font-semibold text-foreground mb-2">Disponibil în planul Pro</h2>
-          <p className="text-sm text-muted-foreground mb-4">AI Chat nelimitat este inclus în planul Pro (49 lei/lună). Întreabă orice despre performanța ta muzicală.</p>
+          <p className="text-sm text-muted-foreground mb-4">AI Chat nelimitat este inclus în planul Pro ({planPriceLabel('pro')}). Întreabă orice despre performanța ta muzicală.</p>
           <Button asChild><Link to="/pricing">Upgrade la Pro</Link></Button>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { Loader2, ArrowRight, Sparkles, Lock, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { planPriceLabel, PLAN_LIMITS } from '@/lib/pricing';
 
 interface Recommendation {
   id: string; platform: string; category: string; priority: string;
@@ -25,7 +26,8 @@ const PLATFORM_COLORS: Record<string, string> = {
 
 // Number of full-detail recommendations a Free user can see. The rest are blurred
 // with an upgrade paywall on top. Landing page promises "1 recomandare teaser vizibilă".
-const FREE_VISIBLE_COUNT = 1;
+// Sourced from src/lib/pricing.ts so pricing UI and gating stay aligned.
+const FREE_VISIBLE_COUNT = PLAN_LIMITS.free.recommendationsVisiblePerDay;
 
 export default function Recommendations() {
   const { user } = useAuth();
@@ -142,7 +144,7 @@ export default function Recommendations() {
               <h3 className="text-sm sm:text-base font-semibold text-foreground">
                 Încă {blockedCount} recomandăr{blockedCount === 1 ? 'e' : 'i'} detaliat{blockedCount === 1 ? 'ă' : 'e'} blocat{blockedCount === 1 ? 'ă' : 'e'}
               </h3>
-              <p className="text-xs sm:text-sm text-muted-foreground">Upgrade la Pro (49 lei/lună) pentru toate recomandările personalizate.</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">Upgrade la Pro ({planPriceLabel('pro')}) pentru toate recomandările personalizate.</p>
             </div>
             <Button asChild size="sm" className="w-full sm:w-auto glow-primary">
               <Link to="/pricing">

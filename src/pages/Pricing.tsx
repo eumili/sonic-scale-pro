@@ -10,17 +10,7 @@ import Footer from '@/components/landing/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from '@/hooks/use-toast';
-
-const PRICES = {
-  pro: {
-    monthly: { id: 'price_1TJugbGov5n78hOqT1YD3MGq', amount: '19' },
-    yearly: { id: 'price_1TJugbGov5n78hOqQwPK03Ss', amount: '190' },
-  },
-  agency: {
-    monthly: { id: 'price_1TJugcGov5n78hOqYt34TN96', amount: '49' },
-    yearly: { id: 'price_1TJugdGov5n78hOqlGVni8yJ', amount: '490' },
-  },
-};
+import { PLAN_PRICING, formatPrice, yearlyDiscountPercent } from '@/lib/pricing';
 
 export default function Pricing() {
   const [yearly, setYearly] = useState(false);
@@ -40,7 +30,8 @@ export default function Pricing() {
     if (!user) { navigate(`/auth/register?plan=${plan}`); return; }
     setLoadingPlan(plan);
     try {
-      const priceId = yearly ? PRICES[plan].yearly.id : PRICES[plan].monthly.id;
+      const priceId = yearly ? PLAN_PRICING[plan].yearly.stripePriceId : PLAN_PRICING[plan].monthly.stripePriceId;
+      if (!priceId) throw new Error('Preț Stripe lipsă pentru acest plan.');
       const { data, error } = await supabase.functions.invoke('create-checkout-session', { body: { priceId } });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
@@ -49,20 +40,50 @@ export default function Pricing() {
     } finally { setLoadingPlan(null); }
   };
 
+  // Yearly discount badge — calculated dynamically from PLAN_PRICING (was hardcoded "-17%").
+  const proDiscount = yearlyDiscountPercent('pro');
+
+  // Free tier features must match actual gating in Platforms.tsx (FREE_PLATFORMS)
+  // and Recommendations.tsx (FREE_VISIBLE_COUNT). Pro features must match what's
+  // actually implemented — "Export rapoarte PDF" and "Istoric audit nelimitat"
+  // were removed because they are not yet built (audit item #7).
   const plans = [
     {
-      key: 'free' as const, name: 'Free', price: '0', yearlyPrice: '0', desc: 'Pentru artiști curioși',
-      features: ['Artist Health Score', 'Audit de bază zilnic', '3 recomandări pe zi', '2 platforme conectate', 'Analytics 7 zile'],
+      key: 'free' as const, name: 'Free', desc: 'Pentru artiști curioși',
+      features: [
+        'Artist Health Score',
+        'Audit de bază zilnic',
+        '1 recomandare vizibilă pe zi',
+        '1 platformă conectată (YouTube)',
+        'Analytics 7 zile',
+      ],
       cta: 'Începe gratuit', highlighted: false,
     },
     {
-      key: 'pro' as const, name: 'Pro', price: '19', yearlyPrice: '190', monthlyEquiv: '15.83', desc: 'Pentru artiști serioși',
-      features: ['Tot din Free', 'Analytics detaliat 90 zile', 'Benchmark vs artiști similari', 'AI Chat nelimitat', 'Alerte algoritm în timp real', '5 platforme conectate', 'Email zilnic personalizat', 'Export rapoarte PDF'],
+      key: 'pro' as const, name: 'Pro', desc: 'Pentru artiști serioși',
+      features: [
+        'Tot din Free',
+        'Analytics detaliat 90 zile',
+        'Benchmark vs artiști similari',
+        'Toate recomandările personalizate',
+        'AI Chat (50 mesaje/zi)',
+        '5 platforme conectate (Spotify, Instagram, TikTok, Apple Music, YouTube)',
+        'Email zilnic personalizat',
+      ],
       cta: 'Începe Pro', highlighted: true,
     },
     {
-      key: 'agency' as const, name: 'Agency', price: '49', yearlyPrice: '490', monthlyEquiv: '40.83', desc: 'Pentru echipe și manageri',
-      features: ['Tot din Pro', 'Multi-artist management', 'API access complet', 'Rapoarte white-label', 'Suport prioritar dedicat', 'Platforme nelimitate', 'Dashboard echipă', 'Onboarding personalizat'],
+      key: 'agency' as const, name: 'Agency', desc: 'Pentru echipe și manageri',
+      features: [
+        'Tot din Pro',
+        'Multi-artist management',
+        'API access complet',
+        'Rapoarte white-label',
+        'Suport prioritar dedicat',
+        'Platforme nelimitate',
+        'AI Chat (200 mesaje/zi)',
+        'Onboarding personalizat',
+      ],
       cta: 'Contactează-ne', highlighted: false,
     },
   ];
@@ -83,14 +104,18 @@ export default function Pricing() {
             <Label className={`text-sm ${!yearly ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>Lunar</Label>
             <Switch checked={yearly} onCheckedChange={setYearly} />
             <Label className={`text-sm ${yearly ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>Anual</Label>
-            {yearly && (
-              <Badge className="bg-primary/20 text-primary border-primary/30 text-xs ml-1">-17%</Badge>
+            {yearly && proDiscount > 0 && (
+              <Badge className="bg-primary/20 text-primary border-primary/30 text-xs ml-1">-{proDiscount}%</Badge>
             )}
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {plans.map(plan => {
-              const displayPrice = yearly && plan.key !== 'free' ? plan.monthlyEquiv : plan.price;
+              const pricing = PLAN_PRICING[plan.key];
+              const monthlyAmount = pricing.monthly.amount;
+              const displayAmount = yearly && plan.key !== 'free'
+                ? pricing.yearly.monthlyEquivalent
+                : monthlyAmount;
               const isLoading = loadingPlan === plan.key;
               return (
                 <div key={plan.name} className={`glass-card p-6 flex flex-col relative backdrop-blur-lg ${plan.highlighted ? 'border-primary/50 glow-primary scale-[1.02]' : ''}`}>
@@ -102,10 +127,10 @@ export default function Pricing() {
                   <h3 className="text-xl font-bold text-foreground mt-2">{plan.name}</h3>
                   <p className="text-sm text-muted-foreground mb-4">{plan.desc}</p>
                   <div className="mb-6">
-                    <span className="text-4xl font-bold text-foreground">€{displayPrice}</span>
+                    <span className="text-4xl font-bold text-foreground">{formatPrice(displayAmount)}</span>
                     <span className="text-muted-foreground">/lună</span>
                     {yearly && plan.key !== 'free' && (
-                      <p className="text-xs text-muted-foreground mt-1">Facturat €{plan.yearlyPrice}/an</p>
+                      <p className="text-xs text-muted-foreground mt-1">Facturat {formatPrice(pricing.yearly.amount)}/an</p>
                     )}
                   </div>
                   <ul className="space-y-2.5 mb-6 flex-1">
